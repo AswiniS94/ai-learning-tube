@@ -13,7 +13,7 @@ from .classify import (Classifier, channel_boilerplate, classify_playlists, clas
 from .config import ConfigError, load_config
 from .paths import build_paths, build_series, course_level_map, score_series
 from .rank import score_videos
-from . import enrich, resources
+from . import concepts as concepts_mod, enrich, resources
 from .site import build_catalog, write_site
 from .state import load_state, save_state
 from .sync import (Log, iso, now_utc, sync_channels, sync_details, sync_playlist_index, sync_playlist_items,
@@ -214,6 +214,7 @@ def build(args) -> int:
 
     try:
         curated = resources.load_curated(args.config, {t.id for t in cfg.topics})
+        concepts = concepts_mod.load_concepts(args.config, {t.id for t in cfg.topics})
     except ConfigError as exc:
         print(f"::error::config: {exc}")
         return 2
@@ -238,12 +239,21 @@ def build(args) -> int:
         "warnings": len(log.warnings),
         "sample_data": bool(args.fixture),
     }
+    core = concepts_mod.build_core_paths(cfg, state, final, series, concepts, boiler,
+                                         max_steps=int(cfg.build["core_max_steps"]),
+                                         min_quality=float(cfg.build["core_min_quality"]))
+    for tid, levels in core.items():
+        for lv, c in levels.items():
+            if c["gaps"]:
+                log.info(f"core path {tid}/{lv}: {len(c['items'])} steps, not covered: {', '.join(c['gaps'])}")
     meta["papers"] = len(res["papers"])
     meta.update({"papers_with_details": res["stats"]["papers_with_details"], "repos": res["stats"]["repos"]})
     log.info(f"resources: {res['stats']['arxiv_ids']} arXiv papers found in descriptions, "
              f"{res['stats']['papers_with_details']} with details; {res['stats']['repos']} GitHub repos; "
              f"{res['stats']['links_checked']} other links")
     catalog = build_catalog(cfg, state, final, series, paths, boiler, meta, res)
+    catalog["core"] = core
+    catalog["concepts"] = concepts_mod.concepts_for_site(concepts)
     write_site(catalog, ROOT / "site", args.out, cfg.site.get("base_url", ""))
     log.info(f"site written to {args.out}: {len(final)} videos, {len(series)} courses "
              f"(scanned {len(state['videos'])} videos)")
@@ -276,11 +286,13 @@ def main(argv=None) -> int:
             return 2
         try:
             cur = resources.load_curated(args.config, {t.id for t in cfg.topics})
+            con = concepts_mod.load_concepts(args.config, {t.id for t in cfg.topics})
         except ConfigError as exc:
             print(f"config error: {exc}")
             return 2
         print(f"ok: {len(cfg.enabled_channels)} channels, {len(cfg.topics)} topics, {len(cfg.roadmaps)} roadmaps, "
-              f"{len(cur['courses'])} curated courses, {len(cur['starters'])} starter kits")
+              f"{len(cur['courses'])} curated courses, {len(cur['starters'])} starter kits, "
+              f"concept checklists for {len(con)} topics")
         return 0
     return build(args)
 

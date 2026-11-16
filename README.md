@@ -139,6 +139,25 @@ Progress is tracked per browser with no account: open **My history** in the side
 - If an ad/tracker blocker stops YouTube's player script, videos still play in a plain embed. Progress
   isn't tracked in that case, but the manual "Mark as watched" button still works.
 
+## Core paths (the minimal set to watch)
+
+For topics with a concept checklist in `config/concepts.toml` (currently LLMs, RAG, AI agents,
+computer vision, reinforcement learning and generative models), each level shows a **core path**:
+the fewest good videos that together cover every concept on that level's checklist.
+
+- A video covers a concept when one of the concept's keywords appears in its title, tags or
+  description (promo text removed). A course covers everything its lectures cover. A single
+  lecture can also be picked on its own when it's the most efficient way to cover a concept.
+- Steps are chosen greedily by *new concepts covered × quality ÷ (1 step + half an hour per hour of
+  video)*, so short, focused videos win unless a course covers much more at once. At most
+  `core_max_steps` steps per level (default 6), and only items scoring at least `core_min_quality`.
+- The topic page shows the checklist (each concept marked with the step that teaches it, ticked once
+  watched), steps and total time per level, and concepts no video covers yet (linked to a search).
+  The previous top-rated list is still available under "More … videos (optional)".
+- To refine a path, edit the checklist: add or remove concepts, adjust keywords, or reorder them
+  (paths follow the checklist order). Run `python -m builder build --offline` to preview without API calls.
+- Topics without a checklist keep the top-rated-per-level path.
+
 ## Hands-on resources and papers
 
 - **From video descriptions:** links are classified as code (GitHub/GitLab/HF Spaces), notebooks

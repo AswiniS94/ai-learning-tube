@@ -98,7 +98,7 @@
     IDX.pathPos = new Map();
     for (const tid in DB.paths) {
       const flat = [];
-      for (const lv of DB.levels) for (const it of DB.paths[tid][lv] || []) flat.push(Object.assign({ lv }, it));
+      for (const lv of DB.levels) for (const it of pathItems(tid, lv)) flat.push(Object.assign({ lv }, it));
       IDX.pathPos.set(tid, flat);
     }
   }
@@ -225,6 +225,19 @@
     return (H.isWatched(id) ? '<span class="badge-watched">✓ Watched</span>' : "") +
       '<span class="prog" aria-hidden="true"><i style="width:' + Math.round(f * 100) + '%"></i></span>';
   }
+  function coversLine(opts) {
+    return opts && opts.covers && opts.covers.length ? '<div class="covers">Covers: ' + opts.covers.map(esc).join(" · ") + "</div>" : "";
+  }
+  // The core path (concept checklist) when the topic has one, otherwise the top-rated picks.
+  function pathItems(tid, lv) {
+    const c = DB.core && DB.core[tid] && DB.core[tid][lv];
+    return c ? c.items : ((DB.paths[tid] || {})[lv] || []);
+  }
+  function itemHours(it) {
+    if (it.k === "v") return (IDX.video.get(it.id) || {}).d || 0;
+    const s = IDX.series.get(it.id);
+    return s ? s.v.reduce((a, id) => a + ((IDX.video.get(id) || {}).d || 0), 0) : 0;
+  }
   function seriesDone(s) { return s.v.filter((id) => H.isWatched(id)).length; }
   function itemDone(it) {
     if (it.k === "v") return H.isWatched(it.id);
@@ -242,7 +255,7 @@
       '<div class="sub"><a href="#/?ch=' + enc(v.c) + '">' + chName(v.c) + "</a> · " + fmtNum(v.v) + " views · " + ago(v.p) + "</div>" +
       '<div class="tags"><span class="q" title="Quality score (0–100)">★ ' + Math.round(v.q) + "</span>" + lvTag(v.lv) +
       '<a class="tag" href="#/topic/' + enc(v.tp[0]) + '">' + topicName(v.tp[0]) + "</a>" +
-      '<span class="tag">' + esc(v.f) + "</span>" + resBadges(v) + "</div>" +
+      '<span class="tag">' + esc(v.f) + "</span>" + resBadges(v) + "</div>" + coversLine(opts) +
       "</div></div></article>";
   }
 
@@ -263,7 +276,7 @@
       '<h3 class="title"><a href="#/course/' + enc(s.id) + '" title="' + esc(s.t) + '">' + esc(s.t) + "</a></h3>" +
       '<div class="sub">' + chName(s.c) + " · " + label + " · " + fmtHours(total) + (done ? " · <b>" + done + "/" + s.v.length + " watched</b>" : "") + "</div>" +
       '<div class="tags"><span class="q" title="Course quality (average of its lectures)">★ ' + Math.round(s.q) + "</span>" + lvTag(s.lv) +
-      '<a class="tag" href="#/topic/' + enc(s.tp[0]) + '">' + topicName(s.tp[0]) + "</a></div>" +
+      '<a class="tag" href="#/topic/' + enc(s.tp[0]) + '">' + topicName(s.tp[0]) + "</a></div>" + coversLine(opts) +
       "</div></div></article>";
   }
 
@@ -395,10 +408,11 @@
     }
     h += '<h2 class="section-title">All topics</h2><div class="topic-grid">';
     for (const t of DB.topics) {
-      const p = DB.paths[t.id] || {};
-      const steps = DB.levels.reduce((a, l) => a + (p[l] || []).length, 0);
+      const items = DB.levels.flatMap((l) => pathItems(t.id, l));
+      const secs = items.reduce((a, it) => a + itemHours(it), 0);
+      const hasCore = !!(DB.core && DB.core[t.id]);
       h += '<a class="topic-card" href="#/topic/' + enc(t.id) + '"><h3>' + esc(t.name) + "</h3><p>" + esc(t.desc) + '</p><div class="sub">' +
-        t.n + " videos · " + steps + " path steps</div></a>";
+        (hasCore ? "<b>Core path:</b> " : "") + items.length + " steps · " + fmtHours(secs) + " · from " + t.n + " videos</div></a>";
     }
     $main.innerHTML = h + "</div>";
     const anchor = location.hash.split("#")[2];
@@ -408,33 +422,64 @@
   function renderTopic(tid) {
     const t = IDX.topic.get(tid);
     if (!t) return notFound();
-    const path = DB.paths[tid] || {};
+    const core = DB.core && DB.core[tid];
+    const checklist = (DB.concepts || {})[tid] || {};
     let h = sampleBanner() + '<div class="page-head"><h1>' + esc(t.name) + "</h1><p>" + esc(t.desc) + "</p>";
+    if (core) {
+      h += '<p class="core-note">🎯 <b>Core path:</b> the fewest videos that together cover each level\'s key concepts. ' +
+        "Watch these and you have the essentials; more options are tucked under each level.</p>";
+    }
     if (t.pre && t.pre.length) {
       h += '<div class="prereq">Helpful before you start: ' + t.pre.map((p) => '<a href="#/topic/' + enc(p) + '">' + topicName(p) + "</a>").join(", ") + "</div>";
     }
-    h += '<div class="prereq"><a href="' + browseHref({ topic: tid, q: "", lv: "", f: "", ch: "", dur: "", sort: "" }) + '">Browse all ' + t.n + " videos in this topic →</a></div></div>";
-    const allItems = DB.levels.flatMap((lv) => path[lv] || []);
+    h += '<div class="prereq"><a href="' + browseHref({ topic: tid, q: "", lv: "", f: "", ch: "", dur: "", sort: "", hw: "", code: "" }) + '">Browse all ' + t.n + " videos in this topic →</a></div>";
+    const allItems = DB.levels.flatMap((lv) => pathItems(tid, lv));
     const totalDone = allItems.filter(itemDone).length;
-    if (allItems.length && totalDone) {
-      h = h.replace(/<\/div>$/, "") + '<div class="path-progress"><span><b>' + totalDone + " of " + allItems.length +
-        " steps done</b></span>" + '<span class="bar"><i style="width:' + Math.round(100 * totalDone / allItems.length) + '%"></i></span></div></div>';
-    }
+    const totalSecs = allItems.reduce((a, it) => a + itemHours(it), 0);
+    h += '<div class="path-progress"><span><b>' + totalDone + " of " + allItems.length + " steps done</b> · " + fmtHours(totalSecs) + " total</span>" +
+      '<span class="bar"><i style="width:' + (allItems.length ? Math.round(100 * totalDone / allItems.length) : 0) + '%"></i></span></div></div>';
     const kit = (DB.starters || {})[tid];
     if (kit && kit.length) {
       h += resourceBox(kit, "🧰 Starter kit: free hands-on materials", "Read or run these alongside the videos. Hand-picked, free, and link-checked nightly.");
     }
     const tPapers = Object.entries(DB.papers || {}).filter(([, p]) => (p.tp || []).includes(tid));
     if (tPapers.length) {
-      h += '<p class="sub">📑 ' + tPapers.length + ' research paper' + (tPapers.length > 1 ? "s are" : " is") +
+      h += '<p class="sub">📑 ' + tPapers.length + " research paper" + (tPapers.length > 1 ? "s are" : " is") +
         ' explained in this topic\'s videos — <a class="inline-link" href="#/papers?topic=' + enc(tid) + '">see them →</a></p>';
     }
     let step = 0, any = false;
     for (const lv of DB.levels) {
-      const items = path[lv] || [];
+      const items = pathItems(tid, lv);
       const lvDone = items.filter(itemDone).length;
-      h += '<section class="stage ' + lv + '"><div class="stage-head"><h2>' + LEVEL_LABEL[lv] + '</h2><span class="hint">' + LEVEL_HINT[lv] + "</span>" +
+      const secs = items.reduce((a, it) => a + itemHours(it), 0);
+      const concepts = checklist[lv] || [];
+      const gaps = core && core[lv] ? core[lv].gaps : [];
+      h += '<section class="stage ' + lv + '"><div class="stage-head"><h2>' + LEVEL_LABEL[lv] + '</h2><span class="hint">' +
+        (items.length ? items.length + " step" + (items.length > 1 ? "s" : "") + " · " + fmtHours(secs) : LEVEL_HINT[lv]) +
+        (concepts.length ? " · covers " + (concepts.length - gaps.length) + "/" + concepts.length + " concepts" : "") + "</span>" +
         (items.length && lvDone ? '<span class="stage-done">' + (lvDone === items.length ? "✓ " : "") + lvDone + "/" + items.length + " done</span>" : "") + "</div>";
+
+      // concept checklist: which step teaches what, ticked when that step is watched
+      const conceptName = {};
+      for (const c of concepts) conceptName[c.id] = c.n;
+      if (concepts.length) {
+        const byConcept = {};
+        let n = step;
+        for (const it of items) { n++; for (const cid of it.cv || []) if (!(cid in byConcept)) byConcept[cid] = { n, it }; }
+        h += '<div class="concepts">';
+        for (const c of concepts) {
+          const b = byConcept[c.id];
+          if (b) {
+            const done = itemDone(b.it);
+            h += '<span class="concept' + (done ? " learned" : "") + '" title="Covered in step ' + b.n + '">' + (done ? "✓ " : "") + esc(c.n) + ' <i>' + b.n + "</i></span>";
+          } else {
+            h += '<a class="concept gap" href="' + browseHref({ q: c.s, topic: tid, lv: "", f: "", ch: "", dur: "", sort: "", hw: "", code: "" }) +
+              '" title="No single video here covers this yet — search for it">' + esc(c.n) + " — search</a>";
+          }
+        }
+        h += "</div>";
+      }
+
       if (!items.length) {
         h += '<p class="sub">Nothing at this level yet from the selected channels.</p>';
       } else {
@@ -442,10 +487,25 @@
         h += '<div class="grid">';
         for (const it of items) {
           step++;
-          if (it.k === "s") { const s = IDX.series.get(it.id); if (s) h += seriesCard(s, { step }); }
-          else { const v = IDX.video.get(it.id); if (v) h += videoCard(v, { step }); }
+          const covers = (it.cv || []).map((cid) => conceptName[cid]).filter(Boolean);
+          if (it.k === "s") { const s = IDX.series.get(it.id); if (s) h += seriesCard(s, { step, covers }); }
+          else { const v = IDX.video.get(it.id); if (v) h += videoCard(v, { step, covers }); }
         }
         h += "</div>";
+      }
+
+      // "more at this level": the top-rated picks not already in the core path
+      if (core) {
+        const inCore = new Set(items.map((it) => it.k + ":" + it.id));
+        const more = ((DB.paths[tid] || {})[lv] || []).filter((it) => !inCore.has(it.k + ":" + it.id));
+        if (more.length) {
+          h += '<details class="more"><summary>More ' + LEVEL_LABEL[lv].toLowerCase() + " videos (" + more.length + ") — optional, for going deeper</summary><div class=\"grid\">";
+          for (const it of more) {
+            if (it.k === "s") { const s = IDX.series.get(it.id); if (s) h += seriesCard(s); }
+            else { const v = IDX.video.get(it.id); if (v) h += videoCard(v); }
+          }
+          h += "</div></details>";
+        }
       }
       h += "</section>";
     }

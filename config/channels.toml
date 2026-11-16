@@ -28,8 +28,11 @@ quota_budget = 9000
 stats_refresh_hours = 20
 # Do a full rescan of every uploads list every N days (catches renamed videos).
 full_rescan_days = 7
-# How many items to show per level in each learning path.
+# How many items to show per level in "More videos at this level".
 path_items_per_level = 8
+# Core path: at most this many steps per level, from videos/courses scoring at least core_min_quality.
+core_max_steps = 6
+core_min_quality = 25
 
 [[channel]]
 key = "stanford-online"

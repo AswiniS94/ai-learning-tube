@@ -1,0 +1,148 @@
+# Key concepts per topic and level. The "core path" for a level is the smallest set of
+# good videos (or a course) that together cover every concept listed here, so learners
+# get a short, complete path instead of a long list.
+#
+# A video covers a concept when one of the concept's keywords appears in its title,
+# tags or description (after promo text is removed); a course covers the concepts of
+# all its lectures. List concepts in the order they should be learned — the path
+# follows that order. Matching uses the same normalization as taxonomy.toml
+# ("fine-tuning" == "fine tuning").
+#
+# Topics without an entry here keep the plain "top-rated per level" path.
+
+[llms]
+beginner = [
+  { id = "llm-basics", name = "What an LLM is", keywords = ["large language model", "large language models", "llm", "llms", "chatgpt"] },
+  { id = "tokens", name = "Tokens & tokenization", keywords = ["token", "tokens", "tokenization", "tokenizer", "tokenizers"] },
+  { id = "transformer-intuition", name = "Transformers & attention (intuition)", keywords = ["transformer", "transformers", "attention", "self attention"] },
+  { id = "prompting", name = "Prompt engineering", keywords = ["prompt engineering", "prompting", "prompts", "chain of thought"] },
+  { id = "hallucination", name = "Hallucinations & limits", keywords = ["hallucination", "hallucinations"] },
+  { id = "ft-vs-rag", name = "Fine-tuning vs. RAG", keywords = ["fine tuning", "finetuning", "fine tune", "rag vs fine tuning"] },
+]
+intermediate = [
+  { id = "architecture", name = "Transformer architecture in depth", keywords = ["transformer architecture", "multi head attention", "self attention", "positional encoding", "attention mechanism"] },
+  { id = "pretraining", name = "Pretraining & scaling laws", keywords = ["pretraining", "pre training", "scaling laws", "next token prediction"] },
+  { id = "finetuning", name = "Fine-tuning, LoRA & PEFT", keywords = ["fine tuning", "finetuning", "lora", "qlora", "peft", "instruction tuning"] },
+  { id = "alignment", name = "RLHF & preference alignment", keywords = ["rlhf", "reinforcement learning from human feedback", "dpo", "direct preference optimization", "alignment"] },
+  { id = "inference", name = "Inference: decoding, KV cache, quantization", keywords = ["inference", "decoding", "kv cache", "quantization", "sampling", "speculative decoding"] },
+  { id = "llm-eval", name = "Evaluating LLMs", keywords = ["evaluation", "benchmark", "benchmarks", "llm evaluation", "evals"] },
+]
+advanced = [
+  { id = "from-scratch", name = "Training an LLM from scratch", keywords = ["from scratch", "cs336", "language modeling from scratch"] },
+  { id = "moe", name = "Mixture of experts", keywords = ["mixture of experts", "moe"] },
+  { id = "reasoning", name = "Reasoning models & test-time compute", keywords = ["reasoning models", "reasoning model", "test time compute", "reasoning"] },
+  { id = "systems", name = "Efficient attention & training systems", keywords = ["flashattention", "flash attention", "parallelism", "distributed training", "gpu", "gpus"] },
+  { id = "interpretability", name = "Interpretability", keywords = ["interpretability", "mechanistic interpretability"] },
+  { id = "multimodal", name = "Multimodal LLMs", keywords = ["multimodal", "vision language model", "vision language models", "vlm", "vlms"] },
+]
+
+[rag]
+beginner = [
+  { id = "rag-what", name = "What RAG is and why", keywords = ["retrieval augmented generation", "retrieval augmented", "rag"] },
+  { id = "embeddings", name = "Embeddings", keywords = ["embedding", "embeddings", "vector embeddings", "text embeddings"] },
+  { id = "vectordb", name = "Vector databases", keywords = ["vector database", "vector databases", "vector db", "vector store"] },
+  { id = "semantic-search", name = "Semantic search", keywords = ["semantic search", "similarity search", "vector search"] },
+  { id = "rag-vs-ft", name = "RAG vs. fine-tuning", keywords = ["fine tuning", "finetuning", "rag vs fine tuning"] },
+]
+intermediate = [
+  { id = "chunking", name = "Chunking & indexing", keywords = ["chunking", "chunk", "chunks", "indexing"] },
+  { id = "retrieval", name = "Hybrid search & reranking", keywords = ["hybrid search", "reranking", "re ranking", "reranker", "bm25"] },
+  { id = "pipeline", name = "Building a RAG pipeline", keywords = ["langchain", "llamaindex", "llama index", "pipeline", "build", "building"] },
+  { id = "rag-eval", name = "Evaluating RAG", keywords = ["evaluation", "evaluate", "ragas", "metrics"] },
+  { id = "graphrag", name = "Knowledge graphs & GraphRAG", keywords = ["knowledge graph", "knowledge graphs", "graphrag", "graph rag"] },
+]
+advanced = [
+  { id = "agentic-rag", name = "Agentic RAG", keywords = ["agentic rag", "agentic"] },
+  { id = "dense-retrieval", name = "Dense retrieval & retriever training", keywords = ["dense retrieval", "retriever", "contrastive"] },
+  { id = "long-context", name = "Long context & context engineering", keywords = ["long context", "context window", "context engineering"] },
+  { id = "rag-research", name = "RAG research frontiers", keywords = ["research", "paper", "retrieval"] },
+]
+
+[ai-agents]
+beginner = [
+  { id = "agent-what", name = "What an AI agent is", keywords = ["ai agent", "ai agents", "agent", "agents"] },
+  { id = "agentic", name = "Agentic AI vs. chatbots & workflows", keywords = ["agentic", "agentic ai", "agentic workflow", "agentic workflows", "workflow", "workflows"] },
+  { id = "tools", name = "Tool & function calling", keywords = ["tool calling", "function calling", "tool use", "tools"] },
+  { id = "mcp", name = "Model Context Protocol (MCP)", keywords = ["model context protocol", "mcp"] },
+  { id = "multi-agent", name = "Multi-agent systems", keywords = ["multi agent", "multiagent", "multi agent system", "multi agent systems"] },
+]
+intermediate = [
+  { id = "frameworks", name = "Agent frameworks (LangGraph, CrewAI…)", keywords = ["langgraph", "langchain", "crewai", "crew ai", "autogen", "beeai", "smolagents", "agent framework", "agent frameworks"] },
+  { id = "build", name = "Building an agent hands-on", keywords = ["build", "building", "tutorial", "hands on"] },
+  { id = "planning", name = "Planning & ReAct-style reasoning", keywords = ["planning", "react", "reasoning and acting", "reasoning"] },
+  { id = "memory", name = "Agent memory & state", keywords = ["memory", "agent memory", "state"] },
+  { id = "protocols", name = "Agent protocols (A2A, ACP)", keywords = ["a2a", "agent2agent", "agent communication protocol"] },
+  { id = "agent-eval", name = "Evaluating & observing agents", keywords = ["evaluation", "observability", "evals", "benchmark"] },
+]
+advanced = [
+  { id = "reliability", name = "Reliability & failure modes", keywords = ["reliable", "reliability", "failure", "failure modes", "robust"] },
+  { id = "agent-security", name = "Agent safety & security", keywords = ["prompt injection", "security", "guardrails", "safety"] },
+  { id = "agent-research", name = "Agent research directions", keywords = ["research", "paper", "autonomous agent", "autonomous agents", "llm agents"] },
+  { id = "coding-agents", name = "Coding & computer-use agents", keywords = ["coding agent", "coding agents", "computer use", "software engineering"] },
+]
+
+[computer-vision]
+beginner = [
+  { id = "cv-what", name = "What computer vision is", keywords = ["computer vision"] },
+  { id = "classification", name = "Image classification", keywords = ["image classification", "classification", "image recognition"] },
+  { id = "cnn", name = "Convolutional neural networks", keywords = ["convolutional neural network", "convolutional neural networks", "cnn", "cnns", "convnet", "convolution"] },
+  { id = "detection", name = "Object detection", keywords = ["object detection", "detection", "yolo"] },
+  { id = "image-processing", name = "Image processing basics", keywords = ["image processing", "digital image processing", "filtering", "edge detection"] },
+]
+intermediate = [
+  { id = "architectures", name = "CNN architectures (ResNet & co.)", keywords = ["resnet", "residual network", "residual networks", "architectures", "vgg", "alexnet"] },
+  { id = "segmentation", name = "Segmentation", keywords = ["segmentation", "semantic segmentation", "instance segmentation"] },
+  { id = "vit", name = "Vision transformers", keywords = ["vision transformer", "vision transformers", "vit"] },
+  { id = "transfer", name = "Training, augmentation & transfer learning", keywords = ["transfer learning", "data augmentation", "fine tuning", "training"] },
+  { id = "video-3d", name = "Video & 3D vision", keywords = ["video", "3d", "optical flow", "stereo", "point cloud", "point clouds"] },
+]
+advanced = [
+  { id = "self-supervised", name = "Self-supervised & contrastive learning", keywords = ["self supervised", "self supervised learning", "contrastive", "clip"] },
+  { id = "vlm", name = "Vision-language models", keywords = ["vision language model", "vision language models", "vlm", "multimodal"] },
+  { id = "neural-rendering", name = "3D reconstruction & neural rendering", keywords = ["3d reconstruction", "nerf", "neural radiance field", "neural radiance fields", "gaussian splatting"] },
+  { id = "generative-vision", name = "Generative vision models", keywords = ["diffusion", "generative", "gan", "gans"] },
+]
+
+[reinforcement-learning]
+beginner = [
+  { id = "rl-what", name = "What RL is: agent, reward, environment", keywords = ["reinforcement learning", "reward", "agent", "environment"] },
+  { id = "mdp", name = "Markov decision processes", keywords = ["markov decision process", "markov decision processes", "mdp", "mdps"] },
+  { id = "explore", name = "Exploration vs. exploitation & bandits", keywords = ["exploration exploitation", "exploration", "bandit", "bandits", "multi armed bandit"] },
+  { id = "q-learning", name = "Q-learning", keywords = ["q learning", "q value", "q values"] },
+]
+intermediate = [
+  { id = "dp", name = "Value & policy iteration (Bellman)", keywords = ["value iteration", "policy iteration", "dynamic programming", "bellman equation", "bellman"] },
+  { id = "td", name = "Monte Carlo & temporal-difference learning", keywords = ["temporal difference", "td learning", "monte carlo", "sarsa"] },
+  { id = "dqn", name = "Deep Q-networks", keywords = ["deep q network", "dqn", "deep reinforcement learning"] },
+  { id = "policy-gradient", name = "Policy gradients & actor-critic", keywords = ["policy gradient", "policy gradients", "actor critic", "reinforce"] },
+  { id = "ppo", name = "PPO", keywords = ["proximal policy optimization", "ppo"] },
+]
+advanced = [
+  { id = "model-based", name = "Model-based RL & planning (MCTS, AlphaZero)", keywords = ["model based", "planning", "monte carlo tree search", "alphazero", "alphago"] },
+  { id = "offline", name = "Offline RL & imitation learning", keywords = ["offline rl", "imitation learning", "behavior cloning", "inverse reinforcement learning"] },
+  { id = "rl-llm", name = "RL for LLMs (RLHF, DPO)", keywords = ["rlhf", "reinforcement learning from human feedback", "dpo", "reward model"] },
+  { id = "marl", name = "Multi-agent RL", keywords = ["multi agent", "multiagent"] },
+]
+
+[generative-models]
+beginner = [
+  { id = "gen-what", name = "What generative models are", keywords = ["generative model", "generative models", "generative ai", "generative"] },
+  { id = "gan", name = "GANs", keywords = ["gan", "gans", "generative adversarial network", "generative adversarial networks"] },
+  { id = "diffusion", name = "Diffusion models (intuition)", keywords = ["diffusion", "diffusion model", "diffusion models", "stable diffusion"] },
+  { id = "vae", name = "Autoencoders & VAEs", keywords = ["autoencoder", "autoencoders", "variational autoencoder", "variational autoencoders", "vae", "vaes"] },
+  { id = "text-to-image", name = "Text-to-image generation", keywords = ["text to image", "image generation"] },
+]
+intermediate = [
+  { id = "ddpm", name = "Denoising diffusion in detail", keywords = ["denoising diffusion", "ddpm", "denoising"] },
+  { id = "latent", name = "Latent diffusion & Stable Diffusion", keywords = ["latent diffusion", "stable diffusion", "latent"] },
+  { id = "elbo", name = "VAE math & the ELBO", keywords = ["elbo", "variational", "evidence lower bound", "kl divergence"] },
+  { id = "guidance", name = "Conditioning & guidance", keywords = ["guidance", "classifier free guidance", "conditioning", "conditional"] },
+  { id = "gan-training", name = "GAN training & variants", keywords = ["wasserstein", "wgan", "stylegan", "mode collapse", "discriminator"] },
+]
+advanced = [
+  { id = "score", name = "Score-based models & SDEs", keywords = ["score based", "score matching", "sde", "stochastic differential"] },
+  { id = "flows", name = "Normalizing flows & flow matching", keywords = ["normalizing flow", "normalizing flows", "flow matching"] },
+  { id = "autoregressive", name = "Autoregressive & energy-based models", keywords = ["autoregressive", "energy based", "energy based model", "energy based models"] },
+  { id = "video-gen", name = "Video & multimodal generation", keywords = ["video generation", "sora", "video"] },
+  { id = "gen-eval", name = "Evaluating generative models (FID…)", keywords = ["fid", "inception score", "evaluation"] },
+]

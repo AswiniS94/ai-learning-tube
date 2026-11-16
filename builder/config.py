@@ -68,6 +68,8 @@ BUILD_DEFAULTS = {
     "stats_refresh_hours": 20,
     "full_rescan_days": 7,
     "path_items_per_level": 8,
+    "core_max_steps": 6,
+    "core_min_quality": 25,
 }
 
 RANKING_DEFAULTS = {

@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "tests" / "fixtures" / "sample.json"
 # Tests use the real taxonomy/overrides but only the channels present in the sample data.
 TEST_CONFIG = Path(tempfile.mkdtemp(prefix="altube-cfg-"))
-for _name in ("taxonomy.toml", "overrides.toml", "resources.toml"):
+for _name in ("taxonomy.toml", "overrides.toml", "resources.toml", "concepts.toml"):
     shutil.copy(ROOT / "config" / _name, TEST_CONFIG / _name)
 shutil.copy(ROOT / "tests" / "fixtures" / "channels.toml", TEST_CONFIG / "channels.toml")
 CFG = load_config(TEST_CONFIG)
@@ -188,6 +188,19 @@ class EndToEndTests(unittest.TestCase):
         self.assertIn("rag", cat["papers"]["2005.11401"]["tp"])
         self.assertTrue(series["PLstanCS336"].get("r"))
         self.assertGreaterEqual(len(cat["starters"]["llms"]), 3)
+        # core paths: every step exists, matches its level, and covers at least one listed concept
+        self.assertEqual(set(cat["core"]), set(cat["concepts"]))
+        for tid, levels in cat["core"].items():
+            for lv, c in levels.items():
+                ids = {x["id"] for x in cat["concepts"][tid][lv]}
+                self.assertLessEqual(len(c["items"]), CFG.build["core_max_steps"])
+                for it in c["items"]:
+                    ref = series[it["id"]] if it["k"] == "s" else vids[it["id"]]
+                    self.assertEqual(ref["lv"], lv)
+                    self.assertTrue(set(it["cv"]) and set(it["cv"]) <= ids)
+                self.assertTrue(set(c["gaps"]) <= ids)
+        agents_b = [vids[i["id"]]["t"] for i in cat["core"]["ai-agents"]["beginner"]["items"]]
+        self.assertIn("What is MCP? Model Context Protocol Explained", agents_b)
         html = (self.tmp / "dist" / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("{{", html)
 
@@ -333,6 +346,48 @@ class ResourceTests(unittest.TestCase):
         cur = load_curated(ROOT / "config", {t.id for t in CFG.topics})
         for tid in ("llms", "rag", "ai-agents", "computer-vision", "reinforcement-learning", "generative-models"):
             self.assertGreaterEqual(len(cur["starters"].get(tid, [])), 3, tid)
+
+
+class CorePathTests(unittest.TestCase):
+    def concepts(self, *ids):
+        from builder.textutil import KeywordMatcher
+        return [{"id": i, "name": i, "keywords": [i], "m": KeywordMatcher([i])} for i in ids]
+
+    def cand(self, cid, cov, q=60, hours=0.2, k="v", primary=True):
+        return {"k": k, "id": cid, "cov": set(cov), "q": q, "hours": hours, "primary": primary}
+
+    def test_fewest_steps_cover_everything_in_checklist_order(self):
+        from builder.concepts import pick
+        cl = self.concepts("a", "b", "c", "d")
+        out = pick(cl, [self.cand("v1", ["c", "d"]), self.cand("v2", ["a"]), self.cand("v3", ["a", "b"]),
+                        self.cand("v4", ["b"]), self.cand("v5", ["d"], q=99)], max_steps=6)
+        self.assertEqual([i["id"] for i in out["items"]], ["v3", "v1"])  # 2 steps, ordered a,b then c,d
+        self.assertEqual(out["gaps"], [])
+
+    def test_short_videos_beat_a_long_course_unless_it_covers_much_more(self):
+        from builder.concepts import pick
+        cl = self.concepts("a", "b")
+        out = pick(cl, [self.cand("course", ["a", "b"], hours=20, k="s"), self.cand("v1", ["a"]), self.cand("v2", ["b"])], 6)
+        self.assertEqual({i["id"] for i in out["items"]}, {"v1", "v2"})
+        cl = self.concepts(*"abcdefgh")
+        out = pick(cl, [self.cand("course", list("abcdefgh"), hours=3, k="s"), self.cand("v1", ["a"])], 6)
+        self.assertEqual([i["id"] for i in out["items"]], ["course"])
+
+    def test_gaps_max_steps_and_pins(self):
+        from builder.concepts import pick
+        cl = self.concepts("a", "b", "c")
+        out = pick(cl, [self.cand("v1", ["a"]), self.cand("v2", ["b"])], max_steps=1)
+        self.assertEqual(len(out["items"]), 1)
+        self.assertEqual(len(out["gaps"]), 2)
+        out = pick(cl, [self.cand("v1", ["a"]), self.cand("v2", ["a"], q=10)], 6, pins=[{"video": "v2"}])
+        self.assertEqual([i["id"] for i in out["items"]], ["v2"])  # pinned wins; v1 adds nothing new
+
+    def test_repo_concepts_file_is_valid(self):
+        from builder.concepts import load_concepts
+        con = load_concepts(ROOT / "config", {t.id for t in CFG.topics})
+        self.assertEqual(set(con), {"llms", "rag", "ai-agents", "computer-vision", "reinforcement-learning", "generative-models"})
+        for tid, levels in con.items():
+            self.assertEqual(set(levels), {"beginner", "intermediate", "advanced"}, tid)
 
 
 class RealConfigTests(unittest.TestCase):

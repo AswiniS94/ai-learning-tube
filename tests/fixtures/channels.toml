@@ -1,0 +1,22 @@
+# Channel list used by the tests: only the channels present in sample.json.
+[site]
+title = "AI Learning Tube (test)"
+tagline = "Test build"
+
+[[channel]]
+key = "stanford-online"
+name = "Stanford Online"
+handle = "@stanfordonline"
+channel_id = "UCBa5G_ESCn8Yd4vw5U-gIcg"
+weight = 1.05
+
+[[channel]]
+key = "ibm-technology"
+name = "IBM Technology"
+handle = "@IBMTechnology"
+channel_id = "UCKWaEZ-_VweaEx1j62do_vQ"
+
+[[channel]]
+key = "nptel-iisc"
+name = "NPTEL IISc"
+handle = "@nptel-indianinstituteofsci8064"

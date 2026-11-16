@@ -50,10 +50,49 @@ enabled = true
 scan_playlists = true
 
 [[channel]]
-key = "nptel"
-name = "NPTEL"
-handle = "@nptelhrd"
-# channel_id is resolved from the handle at build time.
+key = "nptel-iisc"
+name = "NPTEL IISc"
+handle = "@nptel-indianinstituteofsci8064"
+weight = 1.0
+enabled = true
+scan_playlists = true
+
+[[channel]]
+key = "mit-ocw"
+name = "MIT OpenCourseWare"
+handle = "@mitocw"
+weight = 1.05
+enabled = true
+scan_playlists = true
+
+[[channel]]
+key = "statquest"
+name = "StatQuest with Josh Starmer"
+handle = "@statquest"
+weight = 1.0
+enabled = true
+scan_playlists = true
+
+[[channel]]
+key = "serrano-academy"
+name = "Serrano.Academy"
+handle = "@SerranoAcademy"
+weight = 1.0
+enabled = true
+scan_playlists = true
+
+[[channel]]
+key = "yannic-kilcher"
+name = "Yannic Kilcher"
+handle = "@YannicKilcher"
+weight = 1.0
+enabled = true
+scan_playlists = true
+
+[[channel]]
+key = "sebastian-raschka"
+name = "Sebastian Raschka"
+handle = "@SebastianRaschka"
 weight = 1.0
 enabled = true
 scan_playlists = true

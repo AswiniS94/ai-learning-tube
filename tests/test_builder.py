@@ -16,7 +16,12 @@ from builder.textutil import KeywordMatcher, boilerplate_lines, clean_descriptio
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "tests" / "fixtures" / "sample.json"
-CFG = load_config(ROOT / "config")
+# Tests use the real taxonomy/overrides but only the channels present in the sample data.
+TEST_CONFIG = Path(tempfile.mkdtemp(prefix="altube-cfg-"))
+for _name in ("taxonomy.toml", "overrides.toml"):
+    shutil.copy(ROOT / "config" / _name, TEST_CONFIG / _name)
+shutil.copy(ROOT / "tests" / "fixtures" / "channels.toml", TEST_CONFIG / "channels.toml")
+CFG = load_config(TEST_CONFIG)
 
 
 def by_title(catalog):
@@ -72,7 +77,7 @@ class ClassifierTests(unittest.TestCase):
     def test_ambiguous_words_need_ai_context(self):
         for title in ["Lecture 1: Single Phase Transformer Basics", "Lecture 7: Diffusion in Gases",
                       "Agents for Mass Transfer", "Linear Algebra - Lecture 12: Eigenvalues"]:
-            self.assertFalse(self.tag(title, ch="nptel")["relevant"], title)
+            self.assertFalse(self.tag(title, ch="nptel-iisc")["relevant"], title)
 
     def test_generic_it_videos_excluded_even_with_ai_mentions(self):
         self.assertFalse(self.tag("Kubernetes Explained", "Kubernetes for AI workloads")["relevant"])
@@ -90,13 +95,24 @@ class ClassifierTests(unittest.TestCase):
         self.assertEqual(self.tag("Stanford Seminar - Building Reliable AI Agents", ch="stanford-online", duration=3600)["format"], "Talk")
         self.assertEqual(self.tag("Build an AI Agent with LangGraph: Step by Step Tutorial", duration=1500)["format"], "Tutorial")
 
+    def test_new_channels(self):
+        r = self.tag("MIT 6.034 Artificial Intelligence, Lecture 12: Learning: Neural Nets, Back Propagation", ch="mit-ocw", duration=3000)
+        self.assertEqual((r["level"], r["format"]), ("intermediate", "Lecture"))
+        self.assertIn("MIT 6.034 is an intermediate-level course", r["why"]["level"])
+        self.assertFalse(self.tag("18.03 Differential Equations, Lecture 6", ch="mit-ocw", duration=3000)["relevant"])
+        r = self.tag("Attention Is All You Need (Paper Explained)", "transformer paper", ch="yannic-kilcher", duration=1700)
+        self.assertEqual((r["topics"][0], r["level"]), ("llms", "advanced"))
+        self.assertEqual(self.tag("[ML News] New LLM releases and agent benchmarks", ch="yannic-kilcher", duration=1500)["format"], "News & Podcast")
+        r = self.tag("Decision Trees, Clearly Explained!!!", ch="statquest", duration=1100)
+        self.assertEqual((r["topics"][0], r["level"]), ("ml-foundations", "beginner"))
+
     def test_course_playlist_inheritance(self):
         pl = self.clf.classify_playlist({"title": "Deep Learning - IIT Madras", "desc": ""}, set())
         pl["course"] = True
-        r = self.tag("Lecture 1: Introduction", ch="nptel", duration=2400, playlists=[pl])
+        r = self.tag("Lecture 1: Introduction", ch="nptel-iisc", duration=2400, playlists=[pl])
         self.assertTrue(r["relevant"])
         self.assertEqual(r["topics"][0], "deep-learning")
-        self.assertFalse(self.tag("Lecture 1: Introduction", ch="nptel", duration=2400)["relevant"])
+        self.assertFalse(self.tag("Lecture 1: Introduction", ch="nptel-iisc", duration=2400)["relevant"])
 
 
 class RankTests(unittest.TestCase):
@@ -117,7 +133,7 @@ class EndToEndTests(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def build(self, *extra):
-        rc = main(["build", "--fixture", str(FIXTURE), "--state", str(self.tmp / "state"),
+        rc = main(["build", "--fixture", str(FIXTURE), "--config", str(TEST_CONFIG), "--state", str(self.tmp / "state"),
                    "--out", str(self.tmp / "dist"), "--quiet", *extra])
         self.assertEqual(rc, 0)
         return json.loads((self.tmp / "dist" / "data" / "catalog.json").read_text(encoding="utf-8"))
@@ -189,7 +205,7 @@ class EndToEndTests(unittest.TestCase):
             fake2.PAGE = 5
             run_sync(fake2, CFG, state, Classifier(CFG), Log(False), full=False)
         self.assertFalse(any(c.get("uploads_resume_token") for c in state["channels"].values()))
-        nptel = [v for v in state["videos"].values() if v["ch"] == "nptel"]
+        nptel = [v for v in state["videos"].values() if v["ch"] == "nptel-iisc"]
         self.assertGreaterEqual(len(nptel), 20)
 
     def test_upload_cap_backfilled_by_playlists(self):
@@ -199,6 +215,15 @@ class EndToEndTests(unittest.TestCase):
         _, _, tagged = tag_catalog(CFG, state, Classifier(CFG))
         titles = {state["videos"][v]["title"] for v in tagged}
         self.assertIn("Lecture 5: Backpropagation", titles)  # older than the newest 3 uploads
+
+
+class RealConfigTests(unittest.TestCase):
+    def test_repo_config_is_valid(self):
+        cfg = load_config(ROOT / "config")
+        self.assertGreaterEqual(len(cfg.enabled_channels), 1)
+        priors = cfg.level.get("channel_prior", {})
+        keys = {c.key for c in cfg.channels}
+        self.assertFalse(set(priors) - keys, "channel_prior has keys that aren't channels")
 
 
 class ConfigTests(unittest.TestCase):

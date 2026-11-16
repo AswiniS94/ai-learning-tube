@@ -11,7 +11,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from .config import LEVELS, Config
-from .textutil import KeywordMatcher, boilerplate_lines, clean_description, course_codes, normalize
+from . import textutil
+from .textutil import KeywordMatcher, boilerplate_lines, clean_description, course_codes, display_code, normalize
 
 TALK_WORDS = [
     "seminar", "talk", "talks", "keynote", "webinar", "panel", "panel discussion",
@@ -67,6 +68,8 @@ class Classifier:
         lv = cfg.level
         self.level_kw = {name: KeywordMatcher(lv.get(name, [])) for name in LEVELS}
         self.course_levels = {normalize(k).replace(" ", ""): v for k, v in lv.get("course_codes", {}).items()}
+        textutil.KNOWN_NUMERIC_CODES.clear()
+        textutil.KNOWN_NUMERIC_CODES.update(k for k in self.course_levels if k[:1].isdigit())
         self.channel_prior = lv.get("channel_prior", {})
         self.talk = KeywordMatcher(TALK_WORDS)
         self.tutorial = KeywordMatcher(TUTORIAL_WORDS)
@@ -173,7 +176,7 @@ class Classifier:
                 lv = self.course_levels.get(code)
                 if lv:
                     score[lv] += 4.0
-                    signals.append((lv, f"{code.upper()} is a{'n' if lv[0] in 'aei' else ''} {lv}-level course"))
+                    signals.append((lv, f"{display_code(code)} is a{'n' if lv[0] in 'aei' else ''} {lv}-level course"))
                     break
         for lv, m in self.level_kw.items():
             for k in m.find(title):

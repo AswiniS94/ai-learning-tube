@@ -51,7 +51,7 @@ exclude_title = [
 # searchable but are kept out of the learning paths.
 news_patterns = [
   "podcast", "episode", "tech now", "news", "this week in", "weekly roundup",
-  "mixture of experts podcast", "ai in action",
+  "mixture of experts podcast", "ai in action", "ml news",
 ]
 
 # ---------------------------------------------------------------- topics ----
@@ -70,7 +70,7 @@ keywords = [
   "bayesian network", "bayesian networks", "probabilistic graphical model",
   "probabilistic graphical models", "artificial general intelligence", "agi",
   "intelligent agent", "intelligent agents", "rational agent", "rational agents",
-  "automated planning", "classical planning", "cs221", "cs228",
+  "automated planning", "classical planning", "cs221", "cs228", "6 034",
 ]
 contextual = [
   "search algorithm", "search algorithms", "first order logic", "propositional logic",
@@ -118,6 +118,7 @@ keywords = [
   "gaussian mixture model", "semi supervised learning", "self supervised learning",
   "transfer learning", "federated learning", "meta learning", "multi task learning",
   "automl", "precision and recall", "confusion matrix", "cs229", "cs229m",
+  "6 036", "6 390", "6 867", "18 065",
 ]
 contextual = [
   "linear regression", "regression", "regularization", "principal component analysis",
@@ -143,6 +144,7 @@ keywords = [
   "vanishing gradient", "vanishing gradients", "weight initialization",
   "residual network", "residual networks", "resnet", "neural architecture search",
   "representation learning", "seq2seq", "sequence to sequence", "cs230", "cs224w",
+  "6 s191",
 ]
 contextual = [
   "dropout", "softmax", "mlp", "gru", "jax", "sequence modeling", "attention mechanism",
@@ -162,7 +164,7 @@ keywords = [
   "pos tagging", "sentiment analysis", "text classification", "question answering",
   "speech recognition", "text to speech", "dependency parsing", "text mining",
   "topic modeling", "spacy", "nltk", "dialogue system", "dialogue systems",
-  "conversational ai", "language modeling", "cs224n", "cs224u", "xcs224u",
+  "conversational ai", "language modeling", "cs224n", "cs224u", "xcs224u", "6 864",
 ]
 contextual = [
   "nlu", "glove", "tokenization", "parsing", "chatbot", "chatbots", "speech processing",
@@ -417,12 +419,29 @@ cs324 = "advanced"
 cs329s = "intermediate"
 cs109 = "beginner"
 "cme 295" = "intermediate"
+# MIT course numbers (written as on OCW, e.g. "6.034")
+"6.034" = "intermediate"
+"6.036" = "intermediate"
+"6.390" = "intermediate"
+"6.867" = "advanced"
+"6.864" = "advanced"
+"6.s191" = "beginner"
+"6.s094" = "intermediate"
+"18.06" = "beginner"
+"18.065" = "intermediate"
+"6.041" = "beginner"
+"6.006" = "intermediate"
 
 [level.channel_prior]
-# Gentle default per channel (added to that level's score).
+# Gentle default per channel key (added to that level's score).
 ibm-technology = { beginner = 1.0 }
 stanford-online = { intermediate = 0.75 }
-nptel = { intermediate = 0.75 }
+nptel-iisc = { intermediate = 0.75 }
+mit-ocw = { intermediate = 0.75 }
+statquest = { beginner = 1.0 }
+serrano-academy = { beginner = 1.0 }
+yannic-kilcher = { advanced = 1.5 }
+sebastian-raschka = { intermediate = 0.75 }
 
 # -------------------------------------------------------------- ranking ----
 # Quality score (0–100) = weighted sum of these components × channel weight.

@@ -146,7 +146,7 @@ data = {
     "channels": [
         {"id": STAN, "handle": "@stanfordonline", "title": "Stanford Online", "subs": 1_200_000},
         {"id": IBM, "handle": "@IBMTechnology", "title": "IBM Technology", "subs": 1_400_000},
-        {"id": NPTEL, "handle": "@nptelhrd", "title": "NPTEL", "subs": 4_000_000},
+        {"id": NPTEL, "handle": "@nptel-indianinstituteofsci8064", "title": "NPTEL", "subs": 4_000_000},
     ],
     "videos": videos,
     "playlists": playlists,

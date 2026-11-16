@@ -101,5 +101,20 @@ def clean_description(description: str, boilerplate: set[str], limit: int = 1500
     return " ".join(out)[:limit]
 
 
+# MIT-style numbers ("6.034" -> "6 034", "18.065" -> "18 065", "6.S191" -> "6 s191").
+# Bare numbers are too ambiguous, so only codes listed in taxonomy.toml count.
+_MIT_CODE = re.compile(r"\b(6|18) (s?\d{2,3})\b")
+KNOWN_NUMERIC_CODES: set[str] = set()
+
+
 def course_codes(normalized_text: str) -> list[str]:
-    return [a + b for a, b in COURSE_CODE.findall(normalized_text)]
+    codes = [a + b for a, b in COURSE_CODE.findall(normalized_text)]
+    codes += [a + b for a, b in _MIT_CODE.findall(normalized_text) if a + b in KNOWN_NUMERIC_CODES]
+    return codes
+
+
+def display_code(code: str) -> str:
+    if code[:1].isdigit():
+        dept = "18" if code.startswith("18") else "6"
+        return f"MIT {dept}.{code[len(dept):].upper()}"
+    return code.upper()

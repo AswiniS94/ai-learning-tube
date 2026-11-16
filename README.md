@@ -1,7 +1,8 @@
 # AI Learning Tube
 
 A YouTube-style static site that recommends **only** videos from a short list of trusted channels
-(Stanford Online, IBM Technology, NPTEL by default), restricted to AI, LLMs, AI agents, computer vision
+(Stanford Online, IBM Technology, NPTEL IISc, MIT OpenCourseWare, StatQuest, Serrano.Academy,
+Yannic Kilcher and Sebastian Raschka by default), restricted to AI, LLMs, AI agents, computer vision
 and the foundations behind them. Every video is tagged by **topic**, **level** and **format**, ranked by a
 **quality score**, and each topic has a **beginner → intermediate → advanced learning path**.
 GitHub Actions rebuilds and redeploys it every night.
@@ -82,7 +83,7 @@ tests/             unit + end-to-end tests against an API-shaped fake
 knows, refreshes the channel's playlist index, re-reads playlists whose item count changed, and fetches
 duration/stats for relevant videos whose numbers are older than 20 hours. Everything is cached in
 `.state/state.json.gz` (GitHub Actions cache). The YouTube API stops paging an uploads list at roughly
-20,000 videos; NPTEL is larger than that, so its older lectures are reached through its course playlists.
+20,000 videos; for very large channels the older lectures are reached through their course playlists.
 If the quota budget runs out mid-scan, the run saves its place and the next night continues.
 
 **Relevance and topics.** Title (×3), tags (×2) and description (×1) are matched against keyword lists

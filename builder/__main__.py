@@ -77,15 +77,21 @@ def collect_resources(cfg, state, final, series, curated, log, fetch):
     urls = sorted({l["u"] for l in all_links if not l["key"].startswith(("gh:", "arxiv:"))})
     arxiv_ids = sorted({l["key"][6:] for l in all_links if l["key"].startswith("arxiv:")})
     if fetch:
-        try:
-            enrich.enrich_repos(state, repos, log, fetch, token=os.environ.get("GITHUB_TOKEN", ""))
-            enrich.check_links(state, urls, log, fetch)
-            real = fetch is enrich.http_fetch
-            enrich.enrich_arxiv(state, arxiv_ids, log, fetch, pause=3.0 if real else 0)
-            enrich.enrich_citations(state, arxiv_ids, log, fetch, api_key=os.environ.get("SEMANTIC_SCHOLAR_API_KEY", ""),
-                                    pause=1.1 if real else 0)
-        except Exception as exc:  # enrichment must never break the build
-            log.warn(f"resource enrichment stopped: {exc!r}")
+        real = fetch is enrich.http_fetch
+        # Papers first (most visible), then repos, then link checks. Each step is independent:
+        # one failing never stops the others, and none can break the build.
+        steps = [
+            ("arXiv metadata", lambda: enrich.enrich_arxiv(state, arxiv_ids, log, fetch, pause=3.0 if real else 0)),
+            ("Semantic Scholar", lambda: enrich.enrich_citations(
+                state, arxiv_ids, log, fetch, api_key=os.environ.get("SEMANTIC_SCHOLAR_API_KEY", ""), pause=1.1 if real else 0)),
+            ("GitHub repos", lambda: enrich.enrich_repos(state, repos, log, fetch, token=os.environ.get("GITHUB_TOKEN", ""))),
+            ("link check", lambda: enrich.check_links(state, urls, log, fetch)),
+        ]
+        for name, step in steps:
+            try:
+                step()
+            except Exception as exc:
+                log.warn(f"{name} step failed: {exc!r}")
 
     repo_cache, papers_cache = state.get("repos", {}), state.get("papers", {})
 
@@ -117,7 +123,8 @@ def collect_resources(cfg, state, final, series, curated, log, fetch):
     papers = {}
     video_papers = {}
     for vid, ls in video_links.items():
-        ids = [l["key"][6:] for l in ls if l["key"].startswith("arxiv:") and papers_cache.get(l["key"][6:], {}).get("title")]
+        # Listed even before details arrive (the site then shows the arXiv id; details fill in next run).
+        ids = [l["key"][6:] for l in ls if l["key"].startswith("arxiv:")]
         if ids:
             video_papers[vid] = ids
             for pid in ids:
@@ -127,7 +134,10 @@ def collect_resources(cfg, state, final, series, curated, log, fetch):
         "video_papers": video_papers,
         "series": {sid: render_all(ls) for sid, ls in series_links.items()},
         "starters": {tid: render_all(ls) for tid, ls in starters.items()},
-        "papers": {pid: {"cache": papers_cache[pid], "videos": sorted(vs)} for pid, vs in papers.items()},
+        "papers": {pid: {"cache": papers_cache.get(pid, {}), "videos": sorted(vs)} for pid, vs in papers.items()},
+        "stats": {"arxiv_ids": len(arxiv_ids),
+                  "papers_with_details": sum(1 for i in arxiv_ids if papers_cache.get(i, {}).get("title")),
+                  "repos": len(repos), "links_checked": len(urls)},
     }
 
 
@@ -229,6 +239,10 @@ def build(args) -> int:
         "sample_data": bool(args.fixture),
     }
     meta["papers"] = len(res["papers"])
+    meta.update({"papers_with_details": res["stats"]["papers_with_details"], "repos": res["stats"]["repos"]})
+    log.info(f"resources: {res['stats']['arxiv_ids']} arXiv papers found in descriptions, "
+             f"{res['stats']['papers_with_details']} with details; {res['stats']['repos']} GitHub repos; "
+             f"{res['stats']['links_checked']} other links")
     catalog = build_catalog(cfg, state, final, series, paths, boiler, meta, res)
     write_site(catalog, ROOT / "site", args.out, cfg.site.get("base_url", ""))
     log.info(f"site written to {args.out}: {len(final)} videos, {len(series)} courses "

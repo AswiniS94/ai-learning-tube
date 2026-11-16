@@ -199,7 +199,8 @@
   function paperCard(id, p, opts) {
     opts = opts || {};
     const others = (p.v || []).filter((vid) => vid !== opts.skip);
-    let h = '<div class="paper"><a class="paper-title" href="https://arxiv.org/abs/' + esc(id) + '" target="_blank" rel="noopener">' + esc(p.t) + " ↗</a>" +
+    let h = '<div class="paper"><a class="paper-title" href="https://arxiv.org/abs/' + esc(id) + '" target="_blank" rel="noopener">' +
+      esc(p.t || "arXiv:" + id + " (details load on the next nightly build)") + " ↗</a>" +
       '<div class="sub">' + authors(p) + (p.d ? " · " + esc(p.d.slice(0, 4)) : "") + (p.ven ? " · " + esc(p.ven) : "") +
       (p.c != null ? " · cited by " + fmtNum(p.c) : "") + "</div>";
     if (p.tl) h += '<p class="paper-tl">' + esc(p.tl) + "</p>";
@@ -769,7 +770,8 @@
       c.n.toLocaleString() + "</td><td>" + fmtNum(c.subs) + "</td></tr>").join("");
     $main.innerHTML = sampleBanner() + '<div class="about page-head"><h1>How this catalog works</h1>' +
       "<p>Last rebuilt <b>" + esc(m.generated) + "</b> · " + m.videos_listed.toLocaleString() + " videos listed out of " +
-      m.videos_scanned.toLocaleString() + " scanned · " + m.courses + " courses/playlists.</p>" +
+      m.videos_scanned.toLocaleString() + " scanned · " + m.courses + " courses/playlists · " + (m.papers || 0) + " papers (" +
+      (m.papers_with_details || 0) + " with details) · " + (m.repos || 0) + " GitHub repos.</p>" +
       "<h2>What gets in</h2><p>Only videos uploaded by the channels below. Each video's title, tags, description (with link lines and " +
       "repeated channel boilerplate removed) and course-playlist title are matched against a topic dictionary. Ambiguous words such as " +
       "“transformer”, “agent” or “diffusion” only count when the video is clearly about AI, so electrical transformers and chemical " +

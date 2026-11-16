@@ -199,6 +199,39 @@ class EndToEndTests(unittest.TestCase):
         self.assertNotIn(dead, second)
         self.assertIn("https://cs229.stanford.edu/main_notes.pdf", second)
 
+    def test_papers_survive_arxiv_outage(self):
+        """arXiv refusing every request must not hide papers (Semantic Scholar fills in, or ids are shown)."""
+        from unittest import mock
+        from builder import fake as fake_mod
+        real_fake_web = fake_mod.fake_web
+
+        def flaky_web(fixture, s2_titles=True):
+            inner = real_fake_web(fixture)
+            def fetch(url, method="GET", headers=None, body=None, timeout=0):
+                if "export.arxiv.org" in url:
+                    return 503, b""
+                if "api.semanticscholar.org" in url:
+                    if not s2_titles:
+                        return 429, b""
+                    ids = json.loads(body)["ids"]
+                    return 200, json.dumps([{"title": "Paper " + i, "authors": [{"name": "A. Author"}],
+                                             "year": 2020, "citationCount": 5} for i in ids]).encode()
+                return inner(url, method=method, headers=headers, body=body, timeout=timeout)
+            return fetch
+
+        with mock.patch.object(fake_mod, "fake_web", flaky_web):
+            cat = self.build()
+        self.assertEqual(len(cat["papers"]), 3)
+        self.assertTrue(all(p["t"].startswith("Paper ARXIV:") for p in cat["papers"].values()))
+        self.assertEqual(cat["meta"]["papers_with_details"], 3)
+
+        shutil.rmtree(self.tmp / "state")
+        with mock.patch.object(fake_mod, "fake_web", lambda f: flaky_web(f, s2_titles=False)):
+            cat = self.build()
+        self.assertEqual(len(cat["papers"]), 3)  # still listed, just without details
+        self.assertEqual(cat["meta"]["papers_with_details"], 0)
+        self.assertTrue(any(v.get("pp") for v in cat["videos"]))
+
     def test_incremental_run_is_cheap(self):
         self.build()
         first = load_state(self.tmp / "state")

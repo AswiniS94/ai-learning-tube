@@ -29,8 +29,8 @@ def http_fetch(url: str, method: str = "GET", headers: dict | None = None, body:
     """Returns (status, body). status 0 = network error."""
     h = {"User-Agent": UA}
     h.update(headers or {})
-    req = urllib.request.Request(url, data=body, method=method, headers=h)
     try:
+        req = urllib.request.Request(url, data=body, method=method, headers=h)
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status, resp.read(2_000_000)
     except urllib.error.HTTPError as exc:
@@ -164,7 +164,13 @@ def enrich_arxiv(state: dict, ids: list[str], log: Log, fetch: Fetch = http_fetc
     for b in range(0, min(len(todo), batch * max_batches), batch):
         chunk = todo[b : b + batch]
         url = "https://export.arxiv.org/api/query?max_results=%d&id_list=%s" % (len(chunk), ",".join(chunk))
-        status, body = fetch(url, timeout=30)
+        status, body = 0, b""
+        for attempt in range(3):  # arXiv often answers 429/503 to busy cloud IPs; back off and retry
+            status, body = fetch(url, timeout=30)
+            if status == 200:
+                break
+            if pause:
+                time.sleep(10 * (attempt + 1))
         if status != 200:
             log.warn(f"arXiv API returned {status}; remaining papers will be fetched next run")
             break
@@ -192,11 +198,11 @@ def enrich_arxiv(state: dict, ids: list[str], log: Log, fetch: Fetch = http_fetc
 def enrich_citations(state: dict, ids: list[str], log: Log, fetch: Fetch = http_fetch, api_key: str = "",
                      refresh_days: float = 7, batch: int = 400, pause: float = 1.1) -> None:
     papers = state.setdefault("papers", {})
-    todo = [i for i in ids if papers.get(i, {}).get("title") and _age_days(papers[i].get("cited_at")) > refresh_days]
+    todo = [i for i in ids if not papers.get(i, {}).get("title") or _age_days(papers[i].get("cited_at")) > refresh_days]
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["x-api-key"] = api_key
-    fields = "citationCount,influentialCitationCount,venue,year,tldr"
+    fields = "title,authors,year,publicationDate,citationCount,influentialCitationCount,venue,tldr"
     updated = 0
     for b in range(0, len(todo), batch):
         chunk = todo[b : b + batch]
@@ -216,10 +222,15 @@ def enrich_citations(state: dict, ids: list[str], log: Log, fetch: Fetch = http_
         except ValueError:
             break
         for i, row in zip(chunk, rows):
-            p = papers[i]
+            p = papers.setdefault(i, {})
             p["cited_at"] = iso(now_utc())
             if not row:
                 continue
+            if not p.get("title") and row.get("title"):  # arXiv metadata missing: use Semantic Scholar's
+                names = [a.get("name", "") for a in (row.get("authors") or []) if a.get("name")]
+                p.update({"title": " ".join(row["title"].split()), "authors": names[:8], "n_authors": len(names),
+                          "published": row.get("publicationDate") or (str(row["year"]) if row.get("year") else ""),
+                          "source": "s2"})
             p["citations"] = int(row.get("citationCount") or 0)
             p["influential"] = int(row.get("influentialCitationCount") or 0)
             p["venue"] = (row.get("venue") or "")[:80]

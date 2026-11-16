@@ -1,0 +1,59 @@
+# Channels the site is allowed to show. ONLY videos uploaded by these channels
+# appear on the site (videos from other channels inside their playlists are dropped).
+#
+# To add a channel, copy a [[channel]] block:
+#   key        short unique id used in URLs and state (lowercase, no spaces)
+#   name       display name
+#   handle     the channel's @handle (used when channel_id is not set)
+#   channel_id optional "UC..." id; preferred over handle when present
+#   weight     quality prior, multiplied into the score (1.0 = neutral, keep 0.8–1.2)
+#   enabled    set false to hide a channel without deleting its config
+#   scan_playlists  also scan the channel's playlists (needed for course grouping,
+#                   and for channels with more than ~20k uploads, because the
+#                   YouTube API stops paging the uploads list around that size)
+
+[site]
+title = "AI Learning Tube"
+tagline = "Curated lectures and explainers on AI, LLMs, agents and computer vision — from university and industry channels only."
+# Public URL of the deployed site (used in <link rel=canonical>); optional.
+base_url = ""
+
+[build]
+# Videos shorter than this are dropped (YouTube Shorts, teasers).
+min_duration_seconds = 120
+# Stop the run politely before using more than this many API quota units
+# (the default free quota is 10,000 units/day).
+quota_budget = 9000
+# Re-fetch view/like counts for relevant videos older than this many hours.
+stats_refresh_hours = 20
+# Do a full rescan of every uploads list every N days (catches renamed videos).
+full_rescan_days = 7
+# How many items to show per level in each learning path.
+path_items_per_level = 8
+
+[[channel]]
+key = "stanford-online"
+name = "Stanford Online"
+handle = "@stanfordonline"
+channel_id = "UCBa5G_ESCn8Yd4vw5U-gIcg"
+weight = 1.05
+enabled = true
+scan_playlists = true
+
+[[channel]]
+key = "ibm-technology"
+name = "IBM Technology"
+handle = "@IBMTechnology"
+channel_id = "UCKWaEZ-_VweaEx1j62do_vQ"
+weight = 1.0
+enabled = true
+scan_playlists = true
+
+[[channel]]
+key = "nptel"
+name = "NPTEL"
+handle = "@nptelhrd"
+# channel_id is resolved from the handle at build time.
+weight = 1.0
+enabled = true
+scan_playlists = true

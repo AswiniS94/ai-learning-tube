@@ -1,0 +1,443 @@
+# Topic, level and format rules used to tag every video.
+#
+# Matching is done on lowercase text where every non-alphanumeric character
+# becomes a space, so "fine-tuning", "Fine Tuning" and "fine_tuning" all match
+# the keyword "fine tuning". Keywords match whole words only.
+#
+#   keywords    strong terms; one hit in a title is enough to tag the topic
+#   contextual  ambiguous terms ("transformer", "agent", "diffusion"...). They
+#               only count when the video also contains an AI context term, and
+#               they count for half. A video also needs at least one strong hit
+#               (or membership in a relevant course playlist) to be kept.
+#
+# Edit freely; the next build re-tags the whole catalog from cached metadata,
+# so tuning this file costs no extra YouTube API quota.
+
+[classifier]
+title_weight = 3.0
+tag_weight = 2.0
+description_weight = 1.0
+contextual_factor = 0.5
+# Score a video needs on its best topic to be included.
+threshold = 3.0
+# Secondary topics need at least this fraction of the best topic's score.
+secondary_ratio = 0.5
+max_topics = 3
+# A course playlist passes this fraction of its topic score to every video in it.
+playlist_inherit_factor = 0.75
+
+# Presence of any of these anywhere in a video's text enables "contextual" terms.
+ai_context = [
+  "artificial intelligence", "machine learning", "deep learning", "neural network",
+  "neural networks", "ai", "ml", "llm", "llms", "large language model",
+  "large language models", "language model", "language models", "generative ai",
+  "genai", "gen ai", "data science", "computer vision", "nlp",
+  "natural language processing", "reinforcement learning", "chatgpt", "gpt",
+  "foundation model", "foundation models", "agentic", "ai agent", "ai agents",
+]
+
+# Any of these in a title removes the video (promotional / admin content).
+exclude_title = [
+  "how to enroll", "enrollment", "info session", "information session",
+  "admission", "admissions", "graduate certificate", "certificate program",
+  "program overview", "student spotlight", "meet the instructor", "trailer",
+  "teaser", "commencement", "alumni", "career fair", "top questions",
+  "power transformer", "distribution transformer", "transformer winding",
+  "current transformer", "potential transformer", "single phase transformer",
+  "three phase transformer", "transformer protection",
+]
+
+# Title or playlist-title matches that mark news shows and podcasts. They stay
+# searchable but are kept out of the learning paths.
+news_patterns = [
+  "podcast", "episode", "tech now", "news", "this week in", "weekly roundup",
+  "mixture of experts podcast", "ai in action",
+]
+
+# ---------------------------------------------------------------- topics ----
+
+[[topic]]
+id = "ai-fundamentals"
+name = "AI Fundamentals"
+description = "Search, logic, probabilistic reasoning and the classical ideas behind intelligent systems."
+half_life_years = 12
+prerequisites = []
+keywords = [
+  "artificial intelligence", "introduction to ai", "intro to ai", "history of ai",
+  "what is ai", "ai explained", "knowledge representation", "constraint satisfaction",
+  "expert system", "expert systems", "symbolic ai", "minimax", "alpha beta pruning",
+  "heuristic search", "informed search", "uninformed search", "a star search",
+  "bayesian network", "bayesian networks", "probabilistic graphical model",
+  "probabilistic graphical models", "artificial general intelligence", "agi",
+  "intelligent agent", "intelligent agents", "rational agent", "rational agents",
+  "automated planning", "classical planning", "cs221", "cs228",
+]
+contextual = [
+  "search algorithm", "search algorithms", "first order logic", "propositional logic",
+  "game playing", "game theory", "markov chain", "inference",
+]
+
+[[topic]]
+id = "math-for-ml"
+name = "Math for Machine Learning"
+description = "Linear algebra, probability, statistics and optimization as used in ML."
+half_life_years = 15
+prerequisites = []
+keywords = [
+  "mathematics for machine learning", "math for machine learning",
+  "maths for machine learning", "linear algebra for machine learning",
+  "probability for machine learning", "statistics for machine learning",
+  "optimization for machine learning", "mathematics for data science",
+  "kl divergence", "matrix calculus",
+]
+contextual = [
+  "linear algebra", "probability", "probability theory", "statistics",
+  "statistical inference", "convex optimization", "optimization", "eigenvalues",
+  "eigenvectors", "singular value decomposition", "svd", "bayes theorem",
+  "information theory", "entropy", "maximum likelihood", "calculus",
+  "central limit theorem", "hypothesis testing",
+]
+
+[[topic]]
+id = "ml-foundations"
+name = "Machine Learning Foundations"
+description = "Supervised and unsupervised learning, classic models, evaluation and generalization."
+half_life_years = 10
+prerequisites = ["math-for-ml"]
+keywords = [
+  "machine learning", "supervised learning", "unsupervised learning",
+  "logistic regression", "support vector machine", "support vector machines", "svm",
+  "svms", "decision tree", "decision trees", "random forest", "random forests",
+  "gradient boosting", "xgboost", "k means", "kmeans", "k nearest neighbor",
+  "k nearest neighbors", "knn", "naive bayes", "bias variance", "overfitting",
+  "cross validation", "feature engineering", "dimensionality reduction",
+  "ensemble learning", "kernel methods", "perceptron", "gradient descent",
+  "stochastic gradient descent", "statistical learning", "pattern recognition",
+  "recommender system", "recommender systems", "recommendation system",
+  "recommendation systems", "collaborative filtering", "expectation maximization",
+  "gaussian mixture model", "semi supervised learning", "self supervised learning",
+  "transfer learning", "federated learning", "meta learning", "multi task learning",
+  "automl", "precision and recall", "confusion matrix", "cs229", "cs229m",
+]
+contextual = [
+  "linear regression", "regression", "regularization", "principal component analysis",
+  "pca", "clustering", "boosting", "classification", "classifier", "anomaly detection",
+  "time series forecasting", "hidden markov model", "hidden markov models",
+  "feature selection", "ml", "model training", "data science",
+]
+
+[[topic]]
+id = "deep-learning"
+name = "Deep Learning & Neural Networks"
+description = "Neural networks, backpropagation, architectures, training and optimization."
+half_life_years = 6
+prerequisites = ["ml-foundations"]
+keywords = [
+  "deep learning", "neural network", "neural networks", "deep neural network",
+  "deep neural networks", "backpropagation", "back propagation",
+  "recurrent neural network", "recurrent neural networks", "rnn", "rnns", "lstm",
+  "long short term memory", "autoencoder", "autoencoders", "batch normalization",
+  "layer normalization", "activation function", "activation functions", "relu",
+  "multilayer perceptron", "pytorch", "tensorflow", "keras",
+  "graph neural network", "graph neural networks", "gnn", "gnns", "adam optimizer",
+  "vanishing gradient", "vanishing gradients", "weight initialization",
+  "residual network", "residual networks", "resnet", "neural architecture search",
+  "representation learning", "seq2seq", "sequence to sequence", "cs230", "cs224w",
+]
+contextual = [
+  "dropout", "softmax", "mlp", "gru", "jax", "sequence modeling", "attention mechanism",
+  "optimizer", "training loop", "loss function",
+]
+
+[[topic]]
+id = "nlp"
+name = "Natural Language Processing"
+description = "Text representations, language understanding, translation, speech and classic NLP."
+half_life_years = 5
+prerequisites = ["deep-learning"]
+keywords = [
+  "natural language processing", "nlp", "natural language understanding",
+  "computational linguistics", "word2vec", "word embedding", "word embeddings",
+  "machine translation", "named entity recognition", "part of speech tagging",
+  "pos tagging", "sentiment analysis", "text classification", "question answering",
+  "speech recognition", "text to speech", "dependency parsing", "text mining",
+  "topic modeling", "spacy", "nltk", "dialogue system", "dialogue systems",
+  "conversational ai", "language modeling", "cs224n", "cs224u", "xcs224u",
+]
+contextual = [
+  "nlu", "glove", "tokenization", "parsing", "chatbot", "chatbots", "speech processing",
+  "text generation", "summarization",
+]
+
+[[topic]]
+id = "llms"
+name = "Large Language Models & Transformers"
+description = "Transformers, pretraining, fine-tuning, alignment, prompting and inference for LLMs."
+half_life_years = 2
+prerequisites = ["deep-learning", "nlp"]
+keywords = [
+  "large language model", "large language models", "llm", "llms", "language model",
+  "language models", "transformer architecture", "transformer model",
+  "transformer models", "attention is all you need", "self attention",
+  "multi head attention", "gpt", "chatgpt", "bert", "llama", "foundation model",
+  "foundation models", "generative ai", "gen ai", "genai", "prompt engineering",
+  "in context learning", "chain of thought", "instruction tuning", "lora", "qlora",
+  "peft", "parameter efficient", "rlhf", "reinforcement learning from human feedback",
+  "direct preference optimization", "tokenizer", "tokenizers", "scaling laws",
+  "mixture of experts", "small language model", "small language models",
+  "context window", "kv cache", "speculative decoding", "knowledge distillation",
+  "reasoning model", "reasoning models", "test time compute", "llm inference",
+  "vllm", "ollama", "hugging face", "huggingface", "openai", "deepseek",
+  "multimodal model", "multimodal models", "vision language model",
+  "vision language models", "vlm", "vlms", "language modeling", "cs336", "cs25",
+  "cme 295", "cs324",
+]
+contextual = [
+  "transformer", "transformers", "attention mechanism", "prompting", "prompts",
+  "fine tuning", "finetuning", "fine tune", "pretraining", "pre training", "dpo",
+  "moe", "slm", "slms", "quantization", "distillation", "hallucination",
+  "hallucinations", "mistral", "gemini", "claude", "granite", "multimodal",
+  "inference", "tokens", "reasoning",
+]
+
+[[topic]]
+id = "rag"
+name = "Retrieval-Augmented Generation & Vector Search"
+description = "Grounding LLMs in your data: embeddings, vector databases, retrieval and reranking."
+half_life_years = 2
+prerequisites = ["llms"]
+keywords = [
+  "retrieval augmented generation", "retrieval augmented", "rag", "graphrag",
+  "graph rag", "agentic rag", "vector database", "vector databases", "vector db",
+  "vector store", "vector search", "semantic search", "embedding model",
+  "embedding models", "text embeddings", "reranking", "re ranking", "reranker",
+  "information retrieval", "dense retrieval", "bm25", "faiss", "chromadb", "milvus",
+  "llamaindex", "llama index", "context engineering",
+]
+contextual = [
+  "embeddings", "embedding", "chunking", "hybrid search", "knowledge graph",
+  "knowledge graphs", "retrieval", "pinecone", "search engine",
+]
+
+[[topic]]
+id = "ai-agents"
+name = "AI Agents & Agentic Systems"
+description = "LLM agents, tool use, planning, memory, multi-agent systems and agent protocols."
+half_life_years = 1.5
+prerequisites = ["llms", "rag"]
+keywords = [
+  "ai agent", "ai agents", "agentic", "agentic ai", "agentic workflow",
+  "agentic workflows", "multi agent", "multiagent", "multi agent system",
+  "multi agent systems", "autonomous agent", "autonomous agents", "llm agent",
+  "llm agents", "language agent", "language agents", "tool calling",
+  "function calling", "model context protocol", "agent2agent",
+  "agent communication protocol", "langchain", "langgraph", "crewai", "crew ai",
+  "autogen", "beeai", "smolagents", "react agent", "coding agent", "coding agents",
+  "agent architecture", "agent memory", "agent framework", "agent frameworks",
+]
+contextual = [
+  "agent", "agents", "mcp", "a2a", "tool use", "planning", "copilot",
+  "ai assistant", "ai assistants", "human in the loop", "computer use", "workflow",
+  "automation",
+]
+
+[[topic]]
+id = "computer-vision"
+name = "Computer Vision"
+description = "Image understanding: CNNs, detection, segmentation, 3D vision and vision transformers."
+half_life_years = 5
+prerequisites = ["deep-learning"]
+keywords = [
+  "computer vision", "image classification", "object detection",
+  "image segmentation", "semantic segmentation", "instance segmentation",
+  "convolutional neural network", "convolutional neural networks", "cnn", "cnns",
+  "convnet", "convnets", "yolo", "vision transformer", "vision transformers",
+  "image recognition", "face recognition", "facial recognition", "image processing",
+  "digital image processing", "optical flow", "feature detection", "edge detection",
+  "3d vision", "3d reconstruction", "stereo vision", "structure from motion",
+  "visual recognition", "video understanding", "pose estimation",
+  "visual question answering", "opencv", "imagenet", "point cloud", "point clouds",
+  "neural radiance field", "neural radiance fields", "gaussian splatting",
+  "visual slam", "cs231n", "cs231a", "cs131",
+]
+contextual = [
+  "vit", "slam", "clip", "image filtering", "medical imaging", "autonomous driving",
+  "self driving", "lidar", "nerf", "segmentation",
+]
+
+[[topic]]
+id = "generative-models"
+name = "Generative Models (Diffusion, GANs, VAEs)"
+description = "How models generate images, audio and video: diffusion, GANs, VAEs and flows."
+half_life_years = 3
+prerequisites = ["deep-learning"]
+keywords = [
+  "generative model", "generative models", "generative modeling",
+  "deep generative model", "deep generative models", "diffusion model",
+  "diffusion models", "stable diffusion", "denoising diffusion",
+  "generative adversarial network", "generative adversarial networks",
+  "variational autoencoder", "variational autoencoders", "normalizing flow",
+  "normalizing flows", "flow matching", "text to image", "image generation",
+  "video generation", "energy based model", "energy based models", "cs236",
+]
+contextual = [
+  "diffusion", "gan", "gans", "vae", "vaes", "autoregressive model",
+  "autoregressive models", "score based", "sora", "dall e", "midjourney",
+  "generative ai",
+]
+
+[[topic]]
+id = "reinforcement-learning"
+name = "Reinforcement Learning"
+description = "MDPs, value and policy methods, deep RL, bandits and RL for LLMs."
+half_life_years = 6
+prerequisites = ["ml-foundations"]
+keywords = [
+  "reinforcement learning", "deep reinforcement learning", "q learning",
+  "deep q network", "dqn", "policy gradient", "policy gradients", "actor critic",
+  "markov decision process", "markov decision processes", "mdp", "mdps",
+  "multi armed bandit", "multi armed bandits", "temporal difference", "td learning",
+  "monte carlo tree search", "alphago", "alphazero", "proximal policy optimization",
+  "offline rl", "imitation learning", "inverse reinforcement learning",
+  "value iteration", "policy iteration", "exploration exploitation", "cs234", "cs224r",
+]
+contextual = [
+  "rl", "bandit", "bandits", "ppo", "reward model", "reward models", "bellman equation",
+  "policy search", "reward",
+]
+
+[[topic]]
+id = "ai-engineering"
+name = "AI Engineering & MLOps"
+description = "Shipping AI: deployment, evaluation, monitoring, infrastructure and system design."
+half_life_years = 2.5
+prerequisites = ["ml-foundations", "llms"]
+keywords = [
+  "mlops", "llmops", "aiops", "model deployment", "model serving", "ml pipeline",
+  "ml pipelines", "machine learning pipeline", "ml engineering", "ai engineering",
+  "ai engineer", "feature store", "model monitoring", "model registry",
+  "inference optimization", "llm evaluation", "evaluating llms", "llm as a judge",
+  "ai observability", "distributed training", "model compression", "edge ai",
+  "tinyml", "ai infrastructure", "ai accelerator", "ai accelerators", "kubeflow",
+  "mlflow", "ml system design", "machine learning systems", "cs329s",
+]
+contextual = [
+  "gpu", "gpus", "cuda", "tpu", "watsonx", "data pipeline", "synthetic data",
+  "benchmark", "benchmarks", "evaluation", "deployment", "observability", "latency",
+]
+
+[[topic]]
+id = "ai-safety"
+name = "AI Safety, Ethics & Governance"
+description = "Alignment, interpretability, fairness, security and responsible use of AI."
+half_life_years = 3
+prerequisites = ["llms"]
+keywords = [
+  "ai safety", "ai ethics", "ethics of ai", "ethical ai", "responsible ai",
+  "trustworthy ai", "ai alignment", "ai governance", "ai regulation", "eu ai act",
+  "ai risk", "ai risks", "explainable ai", "xai", "mechanistic interpretability",
+  "algorithmic bias", "bias in ai", "ai bias", "prompt injection", "ai red teaming",
+  "deepfake", "deepfakes", "ai security", "data poisoning",
+  "privacy preserving machine learning",
+]
+contextual = [
+  "alignment", "explainability", "interpretability", "fairness",
+  "adversarial examples", "adversarial attack", "adversarial attacks", "jailbreak",
+  "jailbreaking", "red teaming", "guardrails", "hallucination", "hallucinations",
+  "differential privacy", "ethics", "governance", "bias",
+]
+
+# ------------------------------------------------------------- roadmaps ----
+# Multi-topic tracks shown on the Learning Paths page.
+
+[[roadmap]]
+id = "cs-core"
+name = "Core AI for CS majors"
+description = "The standard sequence most CS programs follow, from math to modern deep learning."
+topics = ["math-for-ml", "ai-fundamentals", "ml-foundations", "deep-learning", "nlp", "computer-vision", "reinforcement-learning"]
+
+[[roadmap]]
+id = "agent-builder"
+name = "Building AI agents"
+description = "Everything you need to design, build, evaluate and ship LLM-based agents."
+topics = ["ml-foundations", "deep-learning", "llms", "rag", "ai-agents", "ai-engineering", "ai-safety"]
+
+[[roadmap]]
+id = "vision-track"
+name = "Computer vision & generative media"
+description = "From CNNs to diffusion models and vision-language models."
+topics = ["deep-learning", "computer-vision", "generative-models", "llms"]
+
+# --------------------------------------------------------------- levels ----
+
+[level]
+# Words that suggest a level. Title hits count double; playlist titles count 1.5x.
+beginner = [
+  "what is", "what are", "what s", "explained", "introduction", "intro", "basics",
+  "beginner", "beginners", "for beginners", "101", "fundamentals", "overview",
+  "getting started", "crash course", "in 5 minutes", "in 10 minutes", "primer",
+  "the basics", "simple", "simply", "gentle introduction", "for everyone",
+  "non technical", "eli5", "demystified", "made easy",
+]
+intermediate = [
+  "tutorial", "how to", "hands on", "deep dive", "implementation", "implementing",
+  "build", "building", "coding", "practical", "in practice", "case study",
+  "lecture", "course", "workshop", "lab", "architecture", "under the hood",
+  "step by step", "best practices",
+]
+advanced = [
+  "advanced", "research", "seminar", "state of the art", "sota", "frontier",
+  "theory", "theoretical", "proof", "proofs", "convergence", "derivation", "paper",
+  "phd", "graduate", "recent advances", "open problems", "cutting edge",
+  "scaling laws", "mechanistic", "generalization bounds", "variational inference",
+  "optimal transport", "rademacher", "pac learning", "from scratch",
+]
+
+[level.course_codes]
+# Known course numbers found in titles/playlists → level (strongest signal).
+cs221 = "intermediate"
+cs228 = "advanced"
+cs229 = "intermediate"
+cs229m = "advanced"
+cs230 = "intermediate"
+cs231n = "intermediate"
+cs231a = "advanced"
+cs131 = "beginner"
+cs224n = "intermediate"
+cs224u = "advanced"
+xcs224u = "advanced"
+cs224w = "advanced"
+cs224r = "advanced"
+cs234 = "advanced"
+cs236 = "advanced"
+cs25 = "advanced"
+cs330 = "advanced"
+cs336 = "advanced"
+cs324 = "advanced"
+cs329s = "intermediate"
+cs109 = "beginner"
+"cme 295" = "intermediate"
+
+[level.channel_prior]
+# Gentle default per channel (added to that level's score).
+ibm-technology = { beginner = 1.0 }
+stanford-online = { intermediate = 0.75 }
+nptel = { intermediate = 0.75 }
+
+# -------------------------------------------------------------- ranking ----
+# Quality score (0–100) = weighted sum of these components × channel weight.
+# Audience signals are compared within each channel so a small, excellent
+# channel isn't buried by a huge one.
+#   approval     likes per view, smoothed so low-view videos sit near average
+#   popularity   total views and views per day (within channel)
+#   engagement   comments per view, smoothed
+#   freshness    decays with age using the topic's half_life_years
+#   completeness has captions, chapters, a real description
+#   structure    part of a full course playlist
+[ranking]
+approval = 0.30
+popularity = 0.25
+engagement = 0.10
+freshness = 0.15
+completeness = 0.10
+structure = 0.10

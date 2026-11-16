@@ -1,0 +1,27 @@
+# Manual curation. Everything here is optional; IDs are YouTube video IDs
+# (the part after watch?v=) and playlist IDs (the part after list=).
+
+# Hide these completely.
+exclude_videos = []
+exclude_playlists = []
+
+# Always include these videos, even if the classifier would drop them
+# (they still need to belong to one of the configured channels).
+include_videos = []
+
+# Add or subtract quality points (final score is clamped to 0–100).
+# [boost]
+# "VIDEO_ID" = 10
+
+# Replace automatic tags for a video. Any field can be left out.
+# [[retag]]
+# video = "VIDEO_ID"
+# topics = ["llms", "rag"]
+# level = "beginner"        # beginner | intermediate | advanced
+# format = "Explainer"      # Explainer | Lecture | Tutorial | Talk | Deep dive | News & Podcast
+
+# Put a video or course at the top of a topic's learning path at a given level.
+# [[pin]]
+# topic = "llms"
+# level = "beginner"
+# video = "VIDEO_ID"        # or: playlist = "PLAYLIST_ID"

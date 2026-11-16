@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{TAGLINE}}">
+  {{CANONICAL}}
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://i.ytimg.com https://yt3.ggpht.com https://yt3.googleusercontent.com data:; frame-src https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v={{VERSION}}">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <button class="icon-btn" id="menu-btn" aria-label="Toggle navigation" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a class="brand" href="#/" aria-label="Home">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="20" width="8" height="8" rx="2"/><rect x="12" y="13" width="8" height="15" rx="2"/><rect x="21" y="5" width="8" height="23" rx="2"/></svg>
+      <span class="brand-name">{{TITLE}}</span>
+    </a>
+    <form class="search" id="search-form" role="search">
+      <input id="search" type="search" placeholder="Search lectures, topics, courses…  ( / )" aria-label="Search" autocomplete="off">
+      <button type="submit" aria-label="Search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </button>
+    </form>
+    <button class="icon-btn" id="theme-btn" aria-label="Toggle dark mode">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </header>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar" aria-label="Main"></nav>
+    <div class="scrim" id="scrim"></div>
+    <main id="main" tabindex="-1">
+      <noscript><p class="empty">This site needs JavaScript to browse the catalog.</p></noscript>
+      <p class="empty" id="loading">Loading catalog…</p>
+    </main>
+  </div>
+  <script src="app.js?v={{VERSION}}"></script>
+</body>
+</html>

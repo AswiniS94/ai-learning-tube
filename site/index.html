@@ -7,7 +7,7 @@
   <meta name="description" content="{{TAGLINE}}">
   {{CANONICAL}}
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://i.ytimg.com https://yt3.ggpht.com https://yt3.googleusercontent.com data:; frame-src https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://i.ytimg.com https://yt3.ggpht.com https://yt3.googleusercontent.com data:; frame-src https://www.youtube-nocookie.com https://www.youtube.com; style-src 'self' 'unsafe-inline'; script-src 'self' https://www.youtube.com https://s.ytimg.com; connect-src 'self'">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css?v={{VERSION}}">
   <script src="theme.js"></script>
@@ -40,6 +40,7 @@
       <p class="empty" id="loading">Loading catalog…</p>
     </main>
   </div>
+  <script src="history.js?v={{VERSION}}"></script>
   <script src="app.js?v={{VERSION}}"></script>
 </body>
 </html>

@@ -294,3 +294,31 @@ footer.site { color: var(--muted); font-size: 12.5px; margin-top: 48px; }
   .hero-roads .road-mini { display: none; }
   .grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- watch history ---------- */
+.prog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,.35); z-index: 2; }
+.prog i { display: block; height: 100%; background: #e5372b; }
+.thumb .badge-dur { z-index: 3; }
+.prog ~ .badge-dur, .badge-dur:has(~ .prog) { bottom: 10px; }
+.badge-watched {
+  position: absolute; right: 8px; top: 8px; z-index: 3; background: rgba(0,0,0,.82); color: #fff; font-size: 11.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px;
+}
+.card.watched .thumb img, .side-item.watched .thumb img, .course-row.watched .thumb img { opacity: .55; }
+.course-row.watched .n { color: var(--beginner); }
+.watch-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0 2px; font-size: 14px; }
+.ws { font-weight: 600; }
+.ws.done { color: var(--beginner); }
+.ws.muted { color: var(--muted); font-weight: 400; }
+.btn.small { padding: 5px 12px; font-size: 13px; }
+.btn.danger { background: #c62828; color: #fff; }
+label.btn { cursor: pointer; }
+.toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; user-select: none; }
+.toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+.path-progress { display: grid; grid-template-columns: auto minmax(120px, 320px); gap: 12px; align-items: center; margin-top: 12px; font-size: 14px; }
+.path-progress .bar i { background: var(--beginner); }
+.stage-done { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--beginner); }
+.hist-stats { display: flex; flex-wrap: wrap; gap: 28px; margin: 6px 0 4px; }
+.hist-stats div { font-size: 13px; color: var(--muted); }
+.hist-stats b { display: block; font-size: 24px; color: var(--text); }
+.section-title .clear-btn { font-size: 13px; font-weight: 500; margin-left: 8px; }

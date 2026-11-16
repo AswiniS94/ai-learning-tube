@@ -18,6 +18,7 @@
   const $nav = document.getElementById("sidebar");
   const $search = document.getElementById("search");
   let observer = null;
+  const H = window.WatchHistory;
 
   // ------------------------------------------------------------ utils
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
@@ -68,7 +69,8 @@
     const { params } = parseHash();
     const p = new URLSearchParams();
     const merged = Object.assign({ q: params.get("q") || "", topic: params.get("topic") || "", lv: params.get("lv") || "",
-      f: params.get("f") || "", ch: params.get("ch") || "", sort: params.get("sort") || "", dur: params.get("dur") || "" }, over || {});
+      f: params.get("f") || "", ch: params.get("ch") || "", sort: params.get("sort") || "", dur: params.get("dur") || "",
+      hw: params.get("hw") || "" }, over || {});
     for (const k in merged) if (merged[k]) p.set(k, merged[k]);
     const s = p.toString();
     return "#/" + (s ? "?" + s : "");
@@ -105,7 +107,7 @@
   function renderNav() {
     const link = (href, label, extra, prefix) => '<a class="nav-link" href="' + href + '">' + (prefix || "") +
       '<span class="nav-label">' + label + "</span>" + (extra || "") + "</a>";
-    let h = link("#/", "🏠&nbsp; Home") + link("#/paths", "🧭&nbsp; Learning paths") + link("#/courses", "🎓&nbsp; Courses") +
+    let h = link("#/", "🏠&nbsp; Home") + link("#/paths", "🧭&nbsp; Learning paths") + link("#/courses", "🎓&nbsp; Courses") + link("#/history", "🕘&nbsp; My history") +
       link("#/about", "ℹ️&nbsp; How ranking works");
     h += "<h4>Topics</h4>";
     for (const t of DB.topics) {
@@ -132,6 +134,7 @@
   function route() {
     if (!DB) return;
     if (observer) { observer.disconnect(); observer = null; }
+    stopPlayer();
     document.body.classList.remove("nav-open");
     const { parts, params } = parseHash();
     $search.value = parts.length === 0 ? params.get("q") || "" : $search.value;
@@ -142,6 +145,7 @@
     else if (view === "courses") renderCourses();
     else if (view === "paths") renderPaths();
     else if (view === "about") renderAbout();
+    else if (view === "history") renderHistory();
     else renderBrowse(params);
     markNav();
     if (!(view === "paths" && location.hash.split("#")[2])) window.scrollTo(0, 0);
@@ -161,11 +165,25 @@
     return '<div class="thumb"><img src="' + thumbUrl(id) + '" alt="" loading="lazy"><span class="ph">' + esc(label) + "</span>" + (badges || "") + "</div>";
   }
 
+  // Watched badge + red progress strip on a thumbnail.
+  function progBadges(id) {
+    const f = H.frac(id);
+    if (!f) return "";
+    return (H.isWatched(id) ? '<span class="badge-watched">✓ Watched</span>' : "") +
+      '<span class="prog" aria-hidden="true"><i style="width:' + Math.round(f * 100) + '%"></i></span>';
+  }
+  function seriesDone(s) { return s.v.filter((id) => H.isWatched(id)).length; }
+  function itemDone(it) {
+    if (it.k === "v") return H.isWatched(it.id);
+    const s = IDX.series.get(it.id);
+    return !!s && seriesDone(s) === s.v.length;
+  }
+
   function videoCard(v, opts) {
     opts = opts || {};
     const step = opts.step ? '<span class="step-num">' + opts.step + "</span>" : "";
-    return '<article class="card">' +
-      '<a href="#/watch/' + enc(v.id) + '" aria-label="' + esc(v.t) + '">' + thumb(v.id, v.t, step + '<span class="badge-dur">' + fmtDur(v.d) + "</span>") + "</a>" +
+    return '<article class="card' + (H.isWatched(v.id) ? " watched" : "") + '">' +
+      '<a href="#/watch/' + enc(v.id) + '" aria-label="' + esc(v.t) + '">' + thumb(v.id, v.t, step + '<span class="badge-dur">' + fmtDur(v.d) + "</span>" + progBadges(v.id)) + "</a>" +
       '<div class="meta">' + avatar(v.c) + '<div class="meta-text">' +
       '<h3 class="title"><a href="#/watch/' + enc(v.id) + '" title="' + esc(v.t) + '">' + esc(v.t) + "</a></h3>" +
       '<div class="sub"><a href="#/?ch=' + enc(v.c) + '">' + chName(v.c) + "</a> · " + fmtNum(v.v) + " views · " + ago(v.p) + "</div>" +
@@ -181,12 +199,16 @@
     const total = s.v.reduce((a, id) => a + ((IDX.video.get(id) || {}).d || 0), 0);
     const step = opts.step ? '<span class="step-num">' + opts.step + "</span>" : "";
     const label = s.course ? "Course" : "Playlist";
-    return '<article class="card">' +
+    const done = seriesDone(s);
+    const all = done === s.v.length;
+    const prog = done ? (all ? '<span class="badge-watched">✓ Completed</span>' : "") +
+      '<span class="prog" aria-hidden="true"><i style="width:' + Math.round(100 * done / s.v.length) + '%"></i></span>' : "";
+    return '<article class="card' + (all ? " watched" : "") + '">' +
       '<a class="stack" href="#/course/' + enc(s.id) + '" aria-label="' + esc(s.t) + '">' +
-      thumb(first, s.t, step + '<span class="badge-course"><b>' + s.v.length + "</b>lectures</span>") + "</a>" +
+      thumb(first, s.t, step + '<span class="badge-course"><b>' + s.v.length + "</b>lectures</span>" + prog) + "</a>" +
       '<div class="meta">' + avatar(s.c) + '<div class="meta-text">' +
       '<h3 class="title"><a href="#/course/' + enc(s.id) + '" title="' + esc(s.t) + '">' + esc(s.t) + "</a></h3>" +
-      '<div class="sub">' + chName(s.c) + " · " + label + " · " + fmtHours(total) + "</div>" +
+      '<div class="sub">' + chName(s.c) + " · " + label + " · " + fmtHours(total) + (done ? " · <b>" + done + "/" + s.v.length + " watched</b>" : "") + "</div>" +
       '<div class="tags"><span class="q" title="Course quality (average of its lectures)">★ ' + Math.round(s.q) + "</span>" + lvTag(s.lv) +
       '<a class="tag" href="#/topic/' + enc(s.tp[0]) + '">' + topicName(s.tp[0]) + "</a></div>" +
       "</div></div></article>";
@@ -200,7 +222,9 @@
   function filterVideos(params) {
     const toks = norm(params.get("q") || "").trim().split(" ").filter(Boolean);
     const topic = params.get("topic"), lv = params.get("lv"), f = params.get("f"), ch = params.get("ch"), dur = params.get("dur");
+    const hideWatched = params.get("hw") === "1";
     let out = DB.videos.filter((v) => {
+      if (hideWatched && H.isWatched(v.id)) return false;
       if (topic && !v.tp.includes(topic)) return false;
       if (lv && v.lv !== lv) return false;
       if (f && v.f !== f) return false;
@@ -240,9 +264,16 @@
   function renderBrowse(params) {
     const list = filterVideos(params);
     const topic = params.get("topic") || "";
-    const anyFilter = ["q", "topic", "lv", "f", "ch", "dur"].some((k) => params.get(k));
+    const anyFilter = ["q", "topic", "lv", "f", "ch", "dur", "hw"].some((k) => params.get(k));
     let h = sampleBanner();
-    if (!anyFilter) h += hero();
+    if (!anyFilter) {
+      h += hero();
+      const cont = continueList().slice(0, 4);
+      if (cont.length) {
+        h += '<h2 class="section-title">Continue watching <a class="clear-btn" href="#/history">See history →</a></h2><div class="grid">' +
+          cont.map((v) => videoCard(v)).join("") + "</div><br>";
+      }
+    }
     h += '<div class="chips" role="list">';
     h += '<a class="chip' + (topic ? "" : " on") + '" href="' + browseHref({ topic: "" }) + '">All</a>';
     for (const t of DB.topics) if (t.n) h += '<a class="chip' + (topic === t.id ? " on" : "") + '" href="' + browseHref({ topic: t.id }) + '">' + esc(t.name) + "</a>";
@@ -253,6 +284,7 @@
       select("ch", params.get("ch") || "", DB.channels.map((c) => [c.key, c.name]), "All channels") +
       select("dur", params.get("dur") || "", Object.entries(DURS).filter(([k]) => k), "Any length") +
       select("sort", params.get("sort") || "quality", Object.entries(SORTS), "") +
+      '<label class="toggle"><input type="checkbox" id="hw"' + (params.get("hw") === "1" ? " checked" : "") + "> Hide watched</label>" +
       (anyFilter ? '<a class="clear-btn" href="#/">Clear filters</a>' : "") +
       '<span class="result-count">' + list.length.toLocaleString() + " videos</span></div>";
     if (topic) {
@@ -264,6 +296,8 @@
     for (const sel of $main.querySelectorAll(".toolbar select")) {
       sel.addEventListener("change", () => { location.hash = browseHref({ [sel.dataset.k]: sel.value }); });
     }
+    const hw = document.getElementById("hw");
+    if (hw) hw.addEventListener("change", () => { location.hash = browseHref({ hw: hw.checked ? "1" : "" }); });
     if (!list.length) return;
     const grid = document.getElementById("grid");
     let shown = 0;
@@ -322,10 +356,18 @@
       h += '<div class="prereq">Helpful before you start: ' + t.pre.map((p) => '<a href="#/topic/' + enc(p) + '">' + topicName(p) + "</a>").join(", ") + "</div>";
     }
     h += '<div class="prereq"><a href="' + browseHref({ topic: tid, q: "", lv: "", f: "", ch: "", dur: "", sort: "" }) + '">Browse all ' + t.n + " videos in this topic →</a></div></div>";
+    const allItems = DB.levels.flatMap((lv) => path[lv] || []);
+    const totalDone = allItems.filter(itemDone).length;
+    if (allItems.length && totalDone) {
+      h = h.replace(/<\/div>$/, "") + '<div class="path-progress"><span><b>' + totalDone + " of " + allItems.length +
+        " steps done</b></span>" + '<span class="bar"><i style="width:' + Math.round(100 * totalDone / allItems.length) + '%"></i></span></div></div>';
+    }
     let step = 0, any = false;
     for (const lv of DB.levels) {
       const items = path[lv] || [];
-      h += '<section class="stage ' + lv + '"><div class="stage-head"><h2>' + LEVEL_LABEL[lv] + '</h2><span class="hint">' + LEVEL_HINT[lv] + "</span></div>";
+      const lvDone = items.filter(itemDone).length;
+      h += '<section class="stage ' + lv + '"><div class="stage-head"><h2>' + LEVEL_LABEL[lv] + '</h2><span class="hint">' + LEVEL_HINT[lv] + "</span>" +
+        (items.length && lvDone ? '<span class="stage-done">' + (lvDone === items.length ? "✓ " : "") + lvDone + "/" + items.length + " done</span>" : "") + "</div>";
       if (!items.length) {
         h += '<p class="sub">Nothing at this level yet from the selected channels.</p>';
       } else {
@@ -360,15 +402,22 @@
     const s = IDX.series.get(id);
     if (!s) return notFound();
     const total = s.v.reduce((a, vid) => a + ((IDX.video.get(vid) || {}).d || 0), 0);
+    const done = seriesDone(s);
+    const nextIdx = s.v.findIndex((vid) => !H.isWatched(vid));
+    const startBtn = done === 0 ? "▶ Start course" : nextIdx < 0 ? "↺ Watch again" : "▶ Resume: lecture " + (nextIdx + 1);
+    const startId = s.v[nextIdx < 0 ? 0 : nextIdx];
     let h = sampleBanner() + '<div class="page-head"><h1>' + esc(s.t) + '</h1><div class="watch-sub">' + avatar(s.c) + "<span>" + chName(s.c) + "</span>" +
       lvTag(s.lv) + s.tp.map((t) => '<a class="tag" href="#/topic/' + enc(t) + '">' + topicName(t) + "</a>").join("") +
       "<span>" + s.v.length + " lectures · " + fmtHours(total) + '</span><span class="q">★ ' + Math.round(s.q) + "</span>" +
-      '<a class="btn primary" href="#/watch/' + enc(s.v[0]) + '">▶ Start course</a>' +
-      '<a class="btn" href="' + plUrl(s.id) + '" target="_blank" rel="noopener">Open on YouTube ↗</a></div></div><div class="course-list">';
+      '<a class="btn primary" href="#/watch/' + enc(startId) + '">' + startBtn + "</a>" +
+      '<a class="btn" href="' + plUrl(s.id) + '" target="_blank" rel="noopener">Open on YouTube ↗</a></div>' +
+      (done ? '<div class="path-progress"><span><b>' + done + " of " + s.v.length + ' lectures watched</b></span><span class="bar"><i style="width:' +
+        Math.round(100 * done / s.v.length) + '%"></i></span></div>' : "") + '</div><div class="course-list">';
     s.v.forEach((vid, i) => {
       const v = IDX.video.get(vid);
       if (!v) return;
-      h += '<div class="course-row"><span class="n">' + (i + 1) + '</span><a href="#/watch/' + enc(v.id) + '">' + thumb(v.id, v.t, '<span class="badge-dur">' + fmtDur(v.d) + "</span>") +
+      h += '<div class="course-row' + (H.isWatched(v.id) ? " watched" : "") + '"><span class="n">' + (H.isWatched(v.id) ? "✓" : i + 1) + '</span><a href="#/watch/' + enc(v.id) + '">' +
+        thumb(v.id, v.t, '<span class="badge-dur">' + fmtDur(v.d) + "</span>" + progBadges(v.id)) +
         '</a><div><h3 class="title"><a href="#/watch/' + enc(v.id) + '">' + esc(v.t) + '</a></h3><div class="sub">' + fmtNum(v.v) + " views · " + ago(v.p) + "</div>" +
         '<div class="tags"><span class="q">★ ' + Math.round(v.q) + "</span>" + lvTag(v.lv) + '<span class="tag">' + esc(v.f) + "</span></div></div></div>";
     });
@@ -380,13 +429,14 @@
     const tid = v.tp[0];
     const flat = IDX.pathPos.get(tid) || [];
     const i = flat.findIndex((it) => (it.k === "v" && it.id === v.id) || (it.k === "s" && it.id === v.s));
-    if (i < 0 || i + 1 >= flat.length) return null;
-    return flat[i + 1];
+    if (i < 0) return null;
+    for (let j = i + 1; j < flat.length; j++) if (!itemDone(flat[j])) return flat[j];
+    return null;
   }
 
   function sideItem(v, current) {
-    return '<a class="side-item' + (current ? " current" : "") + '" href="#/watch/' + enc(v.id) + '">' +
-      thumb(v.id, v.t, '<span class="badge-dur">' + fmtDur(v.d) + "</span>") +
+    return '<a class="side-item' + (current ? " current" : "") + (H.isWatched(v.id) ? " watched" : "") + '" href="#/watch/' + enc(v.id) + '">' +
+      thumb(v.id, v.t, '<span class="badge-dur">' + fmtDur(v.d) + "</span>" + progBadges(v.id)) +
       '<div><h4 class="title">' + esc(v.t) + '</h4><div class="sub">' + chName(v.c) + "</div>" +
       '<div class="sub">' + fmtNum(v.v) + " views · ★ " + Math.round(v.q) + "</div></div></a>";
   }
@@ -406,6 +456,7 @@
       '<a href="#/?ch=' + enc(v.c) + '"><b>' + chName(v.c) + "</b></a><span>" + fmtNum(v.v) + " views</span><span>" + esc(v.p) + "</span>" +
       '<span class="q">★ ' + Math.round(v.q) + " quality</span>" +
       '<a class="btn" href="' + ytUrl(v.id) + '" target="_blank" rel="noopener">Watch on YouTube ↗</a></div>';
+    main += '<div class="watch-status" id="wstatus"></div>';
     main += '<div class="tags">' + lvTag(v.lv) + '<span class="tag">' + esc(v.f) + "</span>" +
       v.tp.map((t) => '<a class="tag" href="#/topic/' + enc(t) + '">' + topicName(t) + "</a>").join("") +
       (v.cc ? '<span class="tag">CC captions</span>' : "") + "</div>";
@@ -443,18 +494,177 @@
       side += '<h3 class="section-title">More on ' + topicName(v.tp[0]) + '</h3><div class="side-list">' + related.map((x) => sideItem(x)).join("") + "</div>";
     }
     $main.innerHTML = sampleBanner() + '<div class="watch"><div>' + main + "</div><aside>" + side + "</aside></div>";
+    paintStatus(v);
     const cover = $main.querySelector(".play-cover");
-    if (cover) {
-      cover.addEventListener("click", () => {
-        const f = document.createElement("iframe");
-        f.src = "https://www.youtube-nocookie.com/embed/" + enc(v.id) + "?autoplay=1&rel=0";
-        f.title = v.t;
-        f.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-        f.allowFullscreen = true;
-        f.referrerPolicy = "strict-origin-when-cross-origin";
-        document.getElementById("player").replaceChildren(f);
-      });
+    if (cover) cover.addEventListener("click", () => mountPlayer(v));
+  }
+
+  // ------------------------------------------------------------ player + progress tracking
+  // Uses the YouTube IFrame Player API to read the play position every few seconds.
+  // If the API script can't load (blocked by an extension, offline), falls back to a plain embed.
+  let PLAYER = null, TICK = null, PLAY_ID = null, ytPromise = null;
+
+  function loadYT() {
+    if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+    if (ytPromise) return ytPromise;
+    ytPromise = new Promise((resolve, reject) => {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => { if (typeof prev === "function") { try { prev(); } catch (e) {} } resolve(window.YT); };
+      const sc = document.createElement("script");
+      sc.src = "https://www.youtube.com/iframe_api";
+      sc.async = true;
+      sc.onerror = () => reject(new Error("player script blocked"));
+      document.head.appendChild(sc);
+      setTimeout(() => reject(new Error("player script timeout")), 10000);
+    });
+    ytPromise.catch(() => { ytPromise = null; });
+    return ytPromise;
+  }
+
+  function plainIframe(v, start) {
+    const f = document.createElement("iframe");
+    f.src = "https://www.youtube-nocookie.com/embed/" + enc(v.id) + "?autoplay=1&rel=0" + (start ? "&start=" + start : "");
+    f.title = v.t;
+    f.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    f.allowFullscreen = true;
+    f.referrerPolicy = "strict-origin-when-cross-origin";
+    return f;
+  }
+
+  function saveTick() {
+    if (!PLAYER || !PLAY_ID || typeof PLAYER.getCurrentTime !== "function") return;
+    const v = IDX.video.get(PLAY_ID);
+    const t = PLAYER.getCurrentTime(), d = PLAYER.getDuration() || (v && v.d);
+    if (!(t > 0)) return;
+    const was = H.isWatched(PLAY_ID);
+    H.progress(PLAY_ID, t, d);
+    if (!was && H.isWatched(PLAY_ID)) paintStatus(v);
+  }
+
+  function stopPlayer() {
+    if (TICK) { clearInterval(TICK); TICK = null; }
+    if (PLAYER) {
+      try { saveTick(); } catch (e) {}
+      try { PLAYER.destroy(); } catch (e) {}
+      PLAYER = null;
     }
+    PLAY_ID = null;
+  }
+  window.addEventListener("pagehide", () => { try { saveTick(); } catch (e) {} });
+
+  function onPlayerState(ev) {
+    const S = window.YT.PlayerState;
+    if (ev.data === S.PLAYING) {
+      if (!TICK) TICK = setInterval(saveTick, 5000);
+      return;
+    }
+    if (TICK) { clearInterval(TICK); TICK = null; }
+    saveTick();
+    if (PLAY_ID) paintStatus(IDX.video.get(PLAY_ID));
+    if (ev.data === S.ENDED && PLAY_ID) {
+      const v = IDX.video.get(PLAY_ID);
+      H.setWatched(PLAY_ID, true, v && v.d);
+      paintStatus(v);
+    }
+  }
+
+  function mountPlayer(v) {
+    stopPlayer();
+    const box = document.getElementById("player");
+    if (!box) return;
+    const e = H.get(v.id);
+    const start = e && !e.w && e.s > 15 && e.s < v.d - 30 ? Math.floor(e.s) : 0;
+    box.innerHTML = '<div id="yt-target"></div>';
+    PLAY_ID = v.id;
+    H.started(v.id, v.d);
+    paintStatus(v);
+    loadYT().then((YT) => {
+      if (PLAY_ID !== v.id || !document.getElementById("yt-target")) return;
+      PLAYER = new YT.Player("yt-target", {
+        host: "https://www.youtube-nocookie.com",
+        videoId: v.id,
+        playerVars: { autoplay: 1, rel: 0, playsinline: 1, start: start },
+        events: { onStateChange: onPlayerState },
+      });
+    }).catch(() => {
+      if (PLAY_ID !== v.id) return;
+      box.replaceChildren(plainIframe(v, start));
+    });
+  }
+
+  function paintStatus(v) {
+    const el = document.getElementById("wstatus");
+    if (!v || !el) return;
+    const e = H.get(v.id);
+    let txt;
+    if (e && e.w) txt = '<span class="ws done">✓ Watched</span>';
+    else if (e && e.s >= 10) txt = '<span class="ws">In progress · ' + fmtDur(e.s) + " of " + fmtDur(e.d || v.d) + (PLAY_ID === v.id ? "" : " — press play to resume") + "</span>";
+    else txt = '<span class="ws muted">Not watched yet</span>';
+    el.innerHTML = txt + '<button class="btn small" id="wtoggle">' + (e && e.w ? "Mark as unwatched" : "Mark as watched") + "</button>";
+    document.getElementById("wtoggle").addEventListener("click", () => {
+      H.setWatched(v.id, !H.isWatched(v.id), v.d);
+      paintStatus(v);
+    });
+  }
+
+  // ------------------------------------------------------------ history page
+  function continueList() {
+    return H.ids().filter((id) => H.inProgress(id) && IDX.video.has(id))
+      .sort((a, b) => (H.get(b).u || 0) - (H.get(a).u || 0)).map((id) => IDX.video.get(id));
+  }
+
+  function renderHistory() {
+    const ids = H.ids();
+    const known = ids.filter((id) => IDX.video.has(id));
+    const watched = known.filter((id) => H.isWatched(id)).sort((a, b) => (H.get(b).u || 0) - (H.get(a).u || 0));
+    const cont = continueList();
+    const secs = known.reduce((a, id) => { const e = H.get(id); return a + (e.w ? (e.d || IDX.video.get(id).d) : e.s || 0); }, 0);
+    const courses = DB.series.filter((s) => seriesDone(s) === s.v.length).length;
+    let h = sampleBanner() + '<div class="page-head"><h1>My history</h1><p>Saved only in this browser — nothing is sent anywhere. ' +
+      "Use Export / Import to move it to another browser or computer, or as a backup.</p></div>" +
+      '<div class="hist-stats"><div><b>' + watched.length + "</b>videos watched</div><div><b>" + cont.length + "</b>in progress</div><div><b>" +
+      fmtHours(secs) + "</b>watched</div><div><b>" + courses + "</b>courses completed</div></div>" +
+      '<div class="toolbar"><button class="btn" id="h-export">⬇ Export history</button>' +
+      '<label class="btn" for="h-import">⬆ Import history</label><input type="file" id="h-import" accept="application/json,.json" hidden>' +
+      '<button class="btn" id="h-clear">Clear history</button><span class="result-count" id="h-msg"></span></div>';
+    if (ids.length > known.length) {
+      h += '<p class="sub">' + (ids.length - known.length) + " entries are for videos no longer in the catalog; they're kept in case they come back.</p>";
+    }
+    if (cont.length) h += '<h2 class="section-title">Continue watching</h2><div class="grid">' + cont.map((v) => videoCard(v)).join("") + "</div>";
+    if (watched.length) h += '<h2 class="section-title">Watched</h2><div class="grid">' + watched.map((id) => videoCard(IDX.video.get(id))).join("") + "</div>";
+    if (!cont.length && !watched.length) h += '<p class="empty">Nothing yet. Press play on any video and your progress will show up here.</p>';
+    $main.innerHTML = h;
+
+    const msg = (t) => { document.getElementById("h-msg").textContent = t; };
+    document.getElementById("h-export").addEventListener("click", () => {
+      const blob = new Blob([H.exportJSON()], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ai-learning-tube-history-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      msg("Exported " + ids.length + " entries.");
+    });
+    document.getElementById("h-import").addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      file.text().then((text) => {
+        const n = H.importJSON(text);
+        renderHistory();
+        msg("Imported — " + n + " entries added or updated.");
+      }).catch((err) => msg("Import failed: " + err.message));
+    });
+    const clear = document.getElementById("h-clear");
+    clear.addEventListener("click", () => {
+      if (clear.dataset.armed) { H.clear(); renderHistory(); msg("History cleared."); return; }
+      clear.dataset.armed = "1";
+      clear.textContent = "Click again to clear everything";
+      clear.classList.add("danger");
+      setTimeout(() => { if (clear.isConnected) { delete clear.dataset.armed; clear.textContent = "Clear history"; clear.classList.remove("danger"); } }, 4000);
+    });
   }
 
   // ------------------------------------------------------------ about
@@ -481,6 +691,8 @@
       "<li><b>Course structure</b> — being part of a full lecture series.</li></ul>" +
       "<p>Audience signals are compared within each channel, so a smaller channel isn't buried by a bigger one. These are proxies for " +
       "quality, not a review of the teaching itself; the site's curator can boost, pin, retag or hide any video.</p>" +
+      "<h2>Your watch history</h2><p>Progress is stored only in your browser (localStorage) and is never uploaded. A video counts as watched " +
+      "once you've played 90% of it, or when you mark it yourself. Export it from <a href=\"#/history\">My history</a> to back it up or move it.</p>" +
       "<h2>Channels</h2><table><thead><tr><th>Channel</th><th>Videos listed</th><th>Subscribers</th></tr></thead><tbody>" + rows + "</tbody></table>" +
       '<footer class="site">Video data from the YouTube Data API. Videos and thumbnails belong to their creators. Builder ' + esc(m.builder) + ".</footer></div>";
   }

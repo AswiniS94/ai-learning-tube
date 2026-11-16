@@ -125,6 +125,20 @@ step. Beginner levels lead with short explainers; intermediate and advanced lead
 Three roadmaps chain topics into tracks: *Core AI for CS majors*, *Building AI agents*, and
 *Computer vision & generative media* (edit them in `taxonomy.toml`).
 
+## Watch history
+
+Progress is tracked per browser with no account: open **My history** in the sidebar.
+
+- The player uses YouTube's IFrame API to save your position every 5 seconds. A video counts as
+  **watched** at 90% or when it ends, and you can also mark or unmark it by hand on the video page.
+- Thumbnails show a red progress bar and a ✓. Courses show "x of n lectures watched" with a
+  **Resume** button, learning paths show steps done per level, and "Next step" skips what you've finished.
+- The home page has **Continue watching**, and the browse toolbar has **Hide watched**.
+- Everything stays in `localStorage` in your browser; nothing is uploaded. Use **Export / Import** on the
+  history page to back it up or move it to another browser or computer. Imports merge, and the newer entry wins.
+- If an ad/tracker blocker stops YouTube's player script, videos still play in a plain embed. Progress
+  isn't tracked in that case, but the manual "Mark as watched" button still works.
+
 ## Curate
 
 `config/overrides.toml`:

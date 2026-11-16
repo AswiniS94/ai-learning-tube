@@ -103,13 +103,14 @@
 
   // ------------------------------------------------------------ nav
   function renderNav() {
-    const link = (href, label, extra) => '<a class="nav-link" href="' + href + '">' + label + (extra || "") + "</a>";
+    const link = (href, label, extra, prefix) => '<a class="nav-link" href="' + href + '">' + (prefix || "") +
+      '<span class="nav-label">' + label + "</span>" + (extra || "") + "</a>";
     let h = link("#/", "🏠&nbsp; Home") + link("#/paths", "🧭&nbsp; Learning paths") + link("#/courses", "🎓&nbsp; Courses") +
       link("#/about", "ℹ️&nbsp; How ranking works");
     h += "<h4>Topics</h4>";
     for (const t of DB.topics) {
       if (!t.n) continue;
-      h += link("#/topic/" + enc(t.id), '<span class="nav-dot"></span>' + esc(t.name), '<span class="count">' + t.n + "</span>");
+      h += link("#/topic/" + enc(t.id), esc(t.name), '<span class="count">' + t.n + "</span>", '<span class="nav-dot"></span>');
     }
     h += "<h4>Channels</h4>";
     for (const c of DB.channels) {

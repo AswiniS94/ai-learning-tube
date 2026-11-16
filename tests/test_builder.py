@@ -385,7 +385,7 @@ class CorePathTests(unittest.TestCase):
     def test_repo_concepts_file_is_valid(self):
         from builder.concepts import load_concepts
         con = load_concepts(ROOT / "config", {t.id for t in CFG.topics})
-        self.assertEqual(set(con), {"llms", "rag", "ai-agents", "computer-vision", "reinforcement-learning", "generative-models"})
+        self.assertEqual(set(con), {t.id for t in CFG.topics})
         for tid, levels in con.items():
             self.assertEqual(set(levels), {"beginner", "intermediate", "advanced"}, tid)
 

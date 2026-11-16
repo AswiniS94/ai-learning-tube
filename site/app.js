@@ -114,19 +114,53 @@
       if (!t.n) continue;
       h += link("#/topic/" + enc(t.id), esc(t.name), '<span class="count">' + t.n + "</span>", '<span class="nav-dot"></span>');
     }
-    h += "<h4>Channels</h4>";
+    h += '<h4 id="ch-head">Channels</h4>';
     for (const c of DB.channels) {
-      h += link("#/?ch=" + enc(c.key), esc(c.name), '<span class="count">' + c.n + "</span>");
+      h += '<a class="nav-link ch-link" data-ch="' + esc(c.key) + '" href="#/?ch=' + enc(c.key) + '"><span class="nav-label">' + esc(c.name) +
+        '</span><span class="count">' + c.n + "</span></a>";
     }
     $nav.innerHTML = h;
   }
   function markNav() {
     const cur = (location.hash || "#/").replace(/^(#[^#]*)#.*$/, "$1");
-    for (const a of $nav.querySelectorAll(".nav-link")) {
+    for (const a of $nav.querySelectorAll(".nav-link:not(.ch-link)")) {
       const href = a.getAttribute("href");
       const on = href === "#/" ? cur === "#/" || cur === "#" || cur === "" : cur === href || cur.startsWith(href + "?") || cur.startsWith(href + "/");
       a.classList.toggle("active", on);
     }
+  }
+
+  // Channel list in the sidebar follows the current topic selection: counts, links and highlight.
+  function updateChannelNav(view, parts, params) {
+    let topics = [], counts = {}, scoped = false;
+    if (view === "" ) {
+      topics = selectedTopics(params);
+      const noCh = new URLSearchParams(params); noCh.delete("ch");
+      for (const v of filterVideos(noCh)) counts[v.c] = (counts[v.c] || 0) + 1;
+      scoped = ["q", "topic", "lv", "f", "dur", "hw", "code"].some((k) => params.get(k));
+    } else if (view === "topic" && parts[1]) {
+      topics = [parts[1]];
+      for (const v of DB.videos) if (v.tp.includes(parts[1])) counts[v.c] = (counts[v.c] || 0) + 1;
+      scoped = true;
+    } else {
+      for (const c of DB.channels) counts[c.key] = c.n;
+    }
+    const head = document.getElementById("ch-head");
+    if (head) {
+      head.textContent = scoped ? (topics.length === 1 ? "Channels · " + ((IDX.topic.get(topics[0]) || {}).name || "") :
+        topics.length > 1 ? "Channels · " + topics.length + " topics" : "Channels · current filters") : "Channels";
+    }
+    const active = view === "" ? params.get("ch") : null;
+    for (const a of $nav.querySelectorAll(".ch-link")) {
+      const key = a.dataset.ch, n = counts[key] || 0;
+      a.querySelector(".count").textContent = n.toLocaleString();
+      a.classList.toggle("zero", n === 0);
+      a.classList.toggle("active", active === key);
+      a.setAttribute("href", view === "" ? browseHref({ ch: key }) : view === "topic" ? "#/?topic=" + enc(parts[1]) + "&ch=" + enc(key) : "#/?ch=" + enc(key));
+    }
+  }
+  function selectedTopics(params) {
+    return (params.get("topic") || "").split(",").filter((t) => IDX.topic.has(t));
   }
 
   // ------------------------------------------------------------ routing
@@ -149,6 +183,7 @@
     else if (view === "papers") renderPapers(params);
     else renderBrowse(params);
     markNav();
+    updateChannelNav(IDX.topic && ["watch", "topic", "course", "courses", "paths", "about", "history", "papers"].includes(view) ? view : "", parts, params);
     if (!(view === "paths" && location.hash.split("#")[2])) window.scrollTo(0, 0);
   }
 
@@ -287,13 +322,13 @@
   // ------------------------------------------------------------ browse
   function filterVideos(params) {
     const toks = norm(params.get("q") || "").trim().split(" ").filter(Boolean);
-    const topic = params.get("topic"), lv = params.get("lv"), f = params.get("f"), ch = params.get("ch"), dur = params.get("dur");
+    const topics = selectedTopics(params), lv = params.get("lv"), f = params.get("f"), ch = params.get("ch"), dur = params.get("dur");
     const hideWatched = params.get("hw") === "1";
     const codeOnly = params.get("code") === "1";
     let out = DB.videos.filter((v) => {
       if (hideWatched && H.isWatched(v.id)) return false;
       if (codeOnly && !hasCode(v)) return false;
-      if (topic && !v.tp.includes(topic)) return false;
+      if (topics.length && !v.tp.some((t) => topics.includes(t))) return false;
       if (lv && v.lv !== lv) return false;
       if (f && v.f !== f) return false;
       if (ch && v.c !== ch) return false;
@@ -331,7 +366,7 @@
 
   function renderBrowse(params) {
     const list = filterVideos(params);
-    const topic = params.get("topic") || "";
+    const topics = selectedTopics(params);
     const anyFilter = ["q", "topic", "lv", "f", "ch", "dur", "hw", "code"].some((k) => params.get(k));
     let h = sampleBanner();
     if (!anyFilter) {
@@ -342,11 +377,7 @@
           cont.map((v) => videoCard(v)).join("") + "</div><br>";
       }
     }
-    h += '<div class="chips" role="list">';
-    h += '<a class="chip' + (topic ? "" : " on") + '" href="' + browseHref({ topic: "" }) + '">All</a>';
-    for (const t of DB.topics) if (t.n) h += '<a class="chip' + (topic === t.id ? " on" : "") + '" href="' + browseHref({ topic: t.id }) + '">' + esc(t.name) + "</a>";
-    h += "</div>";
-    h += '<div class="toolbar">' +
+    h += '<div class="toolbar">' + topicDropdown(params, topics) +
       select("lv", params.get("lv") || "", DB.levels.map((l) => [l, LEVEL_LABEL[l]]), "All levels") +
       select("f", params.get("f") || "", DB.formats.map((f) => [f, f]), "All formats") +
       select("ch", params.get("ch") || "", DB.channels.map((c) => [c.key, c.name]), "All channels") +
@@ -356,8 +387,8 @@
       '<label class="toggle"><input type="checkbox" id="codeonly"' + (params.get("code") === "1" ? " checked" : "") + "> Has code</label>" +
       (anyFilter ? '<a class="clear-btn" href="#/">Clear filters</a>' : "") +
       '<span class="result-count">' + list.length.toLocaleString() + " videos</span></div>";
-    if (topic) {
-      h += '<p class="sub">Want a guided order? <a class="tag lv-beginner" href="#/topic/' + enc(topic) + '">Open the ' + topicName(topic) + " learning path →</a></p><br>";
+    if (topics.length) {
+      h += '<p class="sub">Want a guided order? ' + topics.map((t) => '<a class="tag lv-beginner" href="#/topic/' + enc(t) + '">' + topicName(t) + " learning path →</a>").join(" ") + "</p><br>";
     }
     h += list.length ? '<div class="grid" id="grid"></div><div class="sentinel" id="sentinel"></div>'
       : '<p class="empty">No videos match these filters.</p>';
@@ -365,6 +396,7 @@
     for (const sel of $main.querySelectorAll(".toolbar select")) {
       sel.addEventListener("change", () => { location.hash = browseHref({ [sel.dataset.k]: sel.value }); });
     }
+    wireTopicDropdown();
     const hw = document.getElementById("hw");
     if (hw) hw.addEventListener("change", () => { location.hash = browseHref({ hw: hw.checked ? "1" : "" }); });
     const co = document.getElementById("codeonly");
@@ -382,6 +414,48 @@
     observer = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) more(); }, { rootMargin: "800px" });
     observer.observe(document.getElementById("sentinel"));
   }
+
+  // Multi-select topic dropdown. Counts reflect the other active filters.
+  function topicDropdown(params, topics) {
+    const noTopic = new URLSearchParams(params); noTopic.delete("topic");
+    const counts = {};
+    for (const v of filterVideos(noTopic)) for (const t of v.tp) counts[t] = (counts[t] || 0) + 1;
+    const label = !topics.length ? "All topics" : topics.length === 1 ? topicName(topics[0]) :
+      topics.length + " topics: " + topics.map((t) => esc(((IDX.topic.get(t) || {}).name || t).split(/ & | \(/)[0])).join(", ");
+    let h = '<details class="multi" id="topic-multi"><summary title="Choose one or more topics">' + label + "</summary>" +
+      '<div class="multi-panel" role="group" aria-label="Topics"><div class="multi-actions">' +
+      '<button type="button" class="clear-btn" data-act="all">Select all</button><button type="button" class="clear-btn" data-act="none">Clear</button></div>';
+    for (const t of DB.topics) {
+      if (!t.n) continue;
+      h += '<label class="multi-opt"><input type="checkbox" value="' + esc(t.id) + '"' + (topics.includes(t.id) ? " checked" : "") + "> " +
+        "<span>" + esc(t.name) + '</span><span class="count">' + (counts[t.id] || 0).toLocaleString() + "</span></label>";
+    }
+    return h + '<div class="multi-foot"><button type="button" class="btn primary small" data-act="apply">Apply</button></div></div></details>';
+  }
+  function wireTopicDropdown() {
+    const d = document.getElementById("topic-multi");
+    if (!d) return;
+    const boxes = () => Array.from(d.querySelectorAll('input[type="checkbox"]'));
+    d.addEventListener("click", (e) => {
+      const act = e.target.dataset && e.target.dataset.act;
+      if (act === "all") boxes().forEach((b) => (b.checked = true));
+      if (act === "none") boxes().forEach((b) => (b.checked = false));
+      if (act === "apply") {
+        const sel = boxes().filter((b) => b.checked).map((b) => b.value);
+        const all = sel.length === boxes().length;
+        location.hash = browseHref({ topic: all ? "" : sel.join(",") });
+      }
+    });
+  }
+  // close the dropdown on outside click / Escape
+  document.addEventListener("click", (e) => {
+    const d = document.getElementById("topic-multi");
+    if (d && d.open && !d.contains(e.target)) d.open = false;
+  });
+  document.addEventListener("keydown", (e) => {
+    const d = document.getElementById("topic-multi");
+    if (e.key === "Escape" && d && d.open) { d.open = false; d.querySelector("summary").focus(); }
+  });
 
   function hero() {
     const totalSec = DB.videos.reduce((a, v) => a + v.d, 0);

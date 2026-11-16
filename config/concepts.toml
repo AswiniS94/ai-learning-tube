@@ -8,7 +8,7 @@
 # follows that order. Matching uses the same normalization as taxonomy.toml
 # ("fine-tuning" == "fine tuning").
 #
-# Topics without an entry here keep the plain "top-rated per level" path.
+# All 13 topics have a checklist. A topic without one falls back to the top-rated-per-level path.
 
 [llms]
 beginner = [
@@ -145,4 +145,160 @@ advanced = [
   { id = "autoregressive", name = "Autoregressive & energy-based models", keywords = ["autoregressive", "energy based", "energy based model", "energy based models"] },
   { id = "video-gen", name = "Video & multimodal generation", keywords = ["video generation", "sora", "video"] },
   { id = "gen-eval", name = "Evaluating generative models (FID…)", keywords = ["fid", "inception score", "evaluation"] },
+]
+
+[ai-fundamentals]
+beginner = [
+  { id = "ai-what", name = "What AI is (and isn't)", keywords = ["artificial intelligence", "what is ai", "ai explained", "introduction to ai", "intro to ai"] },
+  { id = "ai-vs-ml", name = "AI vs. ML vs. deep learning", keywords = ["machine learning", "deep learning", "ai vs ml"] },
+  { id = "agents-env", name = "Intelligent agents & environments", keywords = ["intelligent agent", "intelligent agents", "rational agent", "rational agents", "agent", "agents"] },
+  { id = "search", name = "Search: uninformed & heuristic", keywords = ["search algorithm", "search algorithms", "uninformed search", "informed search", "heuristic search", "a star search", "breadth first", "depth first", "search"] },
+  { id = "ai-history", name = "History of AI", keywords = ["history of ai", "history", "turing"] },
+]
+intermediate = [
+  { id = "games", name = "Adversarial search & games", keywords = ["minimax", "alpha beta pruning", "game playing", "games", "adversarial search"] },
+  { id = "csp", name = "Constraint satisfaction", keywords = ["constraint satisfaction", "csp", "csps"] },
+  { id = "logic", name = "Logic & knowledge representation", keywords = ["propositional logic", "first order logic", "knowledge representation", "logic"] },
+  { id = "uncertainty", name = "Reasoning under uncertainty (Bayes nets)", keywords = ["bayesian network", "bayesian networks", "bayes net", "bayes nets", "probabilistic reasoning", "uncertainty"] },
+  { id = "planning", name = "Planning & MDPs", keywords = ["automated planning", "classical planning", "planning", "markov decision process", "mdp"] },
+]
+advanced = [
+  { id = "pgm", name = "Probabilistic graphical models", keywords = ["probabilistic graphical model", "probabilistic graphical models", "graphical models", "cs228"] },
+  { id = "symbolic", name = "Symbolic vs. neural AI", keywords = ["symbolic ai", "neurosymbolic", "neuro symbolic", "expert system", "expert systems"] },
+  { id = "agi", name = "AGI & the future of AI", keywords = ["artificial general intelligence", "agi", "superintelligence"] },
+  { id = "ai-research", name = "AI research seminars", keywords = ["research", "seminar"] },
+]
+
+[math-for-ml]
+beginner = [
+  { id = "linalg", name = "Vectors & matrices", keywords = ["vector", "vectors", "matrix", "matrices", "linear algebra"] },
+  { id = "calculus", name = "Derivatives & gradients", keywords = ["calculus", "derivative", "derivatives", "gradient", "gradients", "chain rule"] },
+  { id = "probability", name = "Probability basics", keywords = ["probability", "random variable", "random variables", "distribution", "distributions"] },
+  { id = "statistics", name = "Statistics basics", keywords = ["statistics", "mean", "variance", "standard deviation", "hypothesis testing", "p value"] },
+]
+intermediate = [
+  { id = "eigen", name = "Eigenvalues, SVD & PCA", keywords = ["eigenvalues", "eigenvectors", "singular value decomposition", "svd", "pca", "principal component analysis"] },
+  { id = "bayes", name = "Bayes' theorem & maximum likelihood", keywords = ["bayes theorem", "bayes", "maximum likelihood", "mle"] },
+  { id = "optimization", name = "Optimization & gradient descent", keywords = ["optimization", "gradient descent", "convex"] },
+  { id = "information", name = "Entropy, cross-entropy & KL", keywords = ["entropy", "information theory", "kl divergence", "cross entropy"] },
+  { id = "matrix-calculus", name = "Matrix calculus", keywords = ["matrix calculus", "jacobian", "hessian"] },
+]
+advanced = [
+  { id = "convex", name = "Convex optimization & duality", keywords = ["convex optimization", "duality", "lagrange", "lagrangian", "kkt"] },
+  { id = "learning-theory", name = "Learning theory", keywords = ["pac learning", "vc dimension", "generalization bounds", "rademacher"] },
+  { id = "matrix-methods", name = "Matrix methods for ML", keywords = ["18 065", "matrix methods", "low rank"] },
+  { id = "inference", name = "Probabilistic inference (MCMC, variational)", keywords = ["variational inference", "mcmc", "markov chain monte carlo", "gaussian process", "gaussian processes"] },
+]
+
+[ml-foundations]
+beginner = [
+  { id = "ml-what", name = "What machine learning is", keywords = ["machine learning", "what is machine learning"] },
+  { id = "supervised", name = "Supervised vs. unsupervised learning", keywords = ["supervised learning", "unsupervised learning", "supervised", "unsupervised"] },
+  { id = "linreg", name = "Linear regression", keywords = ["linear regression", "regression"] },
+  { id = "logreg", name = "Logistic regression & classification", keywords = ["logistic regression", "classification", "classifier"] },
+  { id = "trees", name = "Decision trees", keywords = ["decision tree", "decision trees"] },
+  { id = "overfitting", name = "Overfitting, bias–variance & validation", keywords = ["overfitting", "underfitting", "bias variance", "cross validation", "train test"] },
+]
+intermediate = [
+  { id = "gd", name = "Gradient descent", keywords = ["gradient descent", "stochastic gradient descent", "sgd"] },
+  { id = "regularization", name = "Regularization (ridge, lasso)", keywords = ["regularization", "ridge", "lasso"] },
+  { id = "svm", name = "SVMs & kernels", keywords = ["support vector machine", "support vector machines", "svm", "svms", "kernel", "kernels", "kernel methods"] },
+  { id = "ensembles", name = "Random forests & boosting", keywords = ["random forest", "random forests", "boosting", "gradient boosting", "xgboost", "ensemble"] },
+  { id = "clustering", name = "Clustering (k-means, GMM)", keywords = ["k means", "kmeans", "clustering", "gaussian mixture", "gaussian mixture model", "expectation maximization"] },
+  { id = "dimred", name = "Dimensionality reduction (PCA)", keywords = ["pca", "principal component analysis", "dimensionality reduction", "t sne", "umap"] },
+  { id = "metrics", name = "Model evaluation & metrics", keywords = ["precision and recall", "precision", "recall", "confusion matrix", "roc", "auc", "f1"] },
+]
+advanced = [
+  { id = "theory", name = "Learning theory & generalization", keywords = ["generalization", "pac learning", "vc dimension", "learning theory", "cs229m"] },
+  { id = "bayesian-ml", name = "Probabilistic & Bayesian ML", keywords = ["bayesian", "probabilistic", "gaussian process", "gaussian processes", "graphical model"] },
+  { id = "meta", name = "Meta, multi-task & transfer learning", keywords = ["meta learning", "multi task learning", "transfer learning", "few shot"] },
+  { id = "recsys", name = "Recommender systems", keywords = ["recommender system", "recommender systems", "recommendation system", "recommendation systems", "collaborative filtering"] },
+]
+
+[deep-learning]
+beginner = [
+  { id = "nn-what", name = "What a neural network is", keywords = ["neural network", "neural networks", "deep learning", "neuron", "neurons"] },
+  { id = "perceptron", name = "Perceptrons & activation functions", keywords = ["perceptron", "activation function", "activation functions", "relu", "sigmoid"] },
+  { id = "backprop", name = "Backpropagation", keywords = ["backpropagation", "back propagation"] },
+  { id = "training", name = "Training: loss & gradient descent", keywords = ["loss function", "gradient descent", "training", "loss"] },
+  { id = "frameworks", name = "PyTorch / TensorFlow basics", keywords = ["pytorch", "tensorflow", "keras"] },
+]
+intermediate = [
+  { id = "optimizers", name = "Optimizers & learning rates", keywords = ["adam", "adam optimizer", "optimizer", "optimizers", "learning rate", "momentum"] },
+  { id = "normalization", name = "Dropout & normalization", keywords = ["dropout", "batch normalization", "batchnorm", "layer normalization"] },
+  { id = "init", name = "Initialization & vanishing gradients", keywords = ["weight initialization", "initialization", "vanishing gradient", "vanishing gradients", "exploding gradients"] },
+  { id = "cnn", name = "Convolutional networks", keywords = ["convolutional neural network", "convolutional neural networks", "cnn", "cnns", "convolution"] },
+  { id = "rnn", name = "RNNs & LSTMs", keywords = ["recurrent neural network", "recurrent neural networks", "rnn", "rnns", "lstm", "gru", "sequence modeling"] },
+  { id = "attention", name = "Attention & transformers", keywords = ["attention", "transformer", "transformers", "self attention"] },
+]
+advanced = [
+  { id = "gnn", name = "Graph neural networks", keywords = ["graph neural network", "graph neural networks", "gnn", "gnns"] },
+  { id = "representation", name = "Representation & self-supervised learning", keywords = ["representation learning", "self supervised", "contrastive"] },
+  { id = "dl-theory", name = "Deep learning theory", keywords = ["theory", "generalization", "double descent", "neural tangent"] },
+  { id = "scale", name = "Scaling & efficient training", keywords = ["scaling", "distributed training", "mixed precision", "efficient"] },
+]
+
+[nlp]
+beginner = [
+  { id = "nlp-what", name = "What NLP is", keywords = ["natural language processing", "nlp"] },
+  { id = "text-processing", name = "Text processing & tokenization", keywords = ["tokenization", "text processing", "preprocessing", "stemming", "lemmatization"] },
+  { id = "word-embeddings", name = "Word embeddings (word2vec, GloVe)", keywords = ["word embedding", "word embeddings", "word2vec", "glove", "embeddings"] },
+  { id = "classification", name = "Text classification & sentiment", keywords = ["sentiment analysis", "text classification", "sentiment"] },
+  { id = "ngram-lm", name = "Language models (n-grams)", keywords = ["language model", "language models", "language modeling", "n gram", "ngram", "n grams"] },
+]
+intermediate = [
+  { id = "seq2seq", name = "Sequence-to-sequence models", keywords = ["seq2seq", "sequence to sequence", "encoder decoder", "rnn", "lstm"] },
+  { id = "attention", name = "Attention & transformers for NLP", keywords = ["attention", "transformer", "transformers", "bert"] },
+  { id = "translation", name = "Machine translation", keywords = ["machine translation", "translation"] },
+  { id = "tagging-parsing", name = "NER, POS tagging & parsing", keywords = ["named entity recognition", "ner", "part of speech", "pos tagging", "parsing", "dependency parsing"] },
+  { id = "qa", name = "Question answering", keywords = ["question answering"] },
+  { id = "speech", name = "Speech recognition", keywords = ["speech recognition", "speech", "asr"] },
+]
+advanced = [
+  { id = "pretrained", name = "Pretrained language models", keywords = ["pretrained", "pretraining", "bert", "gpt", "large language model"] },
+  { id = "nlu", name = "Language understanding & reasoning", keywords = ["natural language understanding", "nlu", "reasoning"] },
+  { id = "multilingual", name = "Multilingual & low-resource NLP", keywords = ["multilingual", "low resource", "cross lingual"] },
+  { id = "nlp-eval", name = "Evaluation & benchmarks", keywords = ["evaluation", "benchmark", "benchmarks", "bleu"] },
+]
+
+[ai-engineering]
+beginner = [
+  { id = "mlops-what", name = "What MLOps / LLMOps is", keywords = ["mlops", "llmops", "aiops", "ml engineering", "ai engineering"] },
+  { id = "deploy", name = "Deploying & serving models", keywords = ["deployment", "deploy", "deploying", "model deployment", "model serving", "serving"] },
+  { id = "data-pipelines", name = "Data pipelines", keywords = ["data pipeline", "data pipelines", "pipeline", "pipelines"] },
+  { id = "infra", name = "GPUs & AI infrastructure", keywords = ["gpu", "gpus", "ai infrastructure", "ai accelerator", "ai accelerators", "tpu"] },
+]
+intermediate = [
+  { id = "monitoring", name = "Monitoring & observability", keywords = ["monitoring", "model monitoring", "observability", "ai observability", "drift"] },
+  { id = "llm-app-eval", name = "Evaluating LLM applications", keywords = ["llm evaluation", "evaluating llms", "llm as a judge", "evaluation", "evals"] },
+  { id = "tooling", name = "MLOps tooling (MLflow, Kubeflow…)", keywords = ["mlflow", "kubeflow", "feature store", "model registry", "experiment tracking"] },
+  { id = "inference-cost", name = "Inference optimization & cost", keywords = ["inference optimization", "quantization", "latency", "cost", "inference"] },
+  { id = "system-design", name = "ML system design", keywords = ["ml system design", "machine learning systems", "system design", "cs329s"] },
+]
+advanced = [
+  { id = "distributed", name = "Distributed training at scale", keywords = ["distributed training", "parallelism", "data parallel", "model parallel"] },
+  { id = "compression", name = "Model compression & edge AI", keywords = ["model compression", "knowledge distillation", "distillation", "pruning", "edge ai", "tinyml"] },
+  { id = "serving-systems", name = "High-throughput serving (vLLM, KV cache)", keywords = ["vllm", "kv cache", "batching", "throughput"] },
+  { id = "prod-governance", name = "Responsible deployment & governance", keywords = ["governance", "ai governance", "compliance"] },
+]
+
+[ai-safety]
+beginner = [
+  { id = "safety-what", name = "What AI safety & ethics cover", keywords = ["ai safety", "ai ethics", "ethics of ai", "responsible ai", "ethical ai"] },
+  { id = "bias", name = "Bias & fairness", keywords = ["bias", "ai bias", "algorithmic bias", "bias in ai", "fairness"] },
+  { id = "explainability", name = "Explainable AI", keywords = ["explainable ai", "xai", "explainability"] },
+  { id = "misinformation", name = "Hallucinations, deepfakes & misinformation", keywords = ["hallucination", "hallucinations", "deepfake", "deepfakes", "misinformation"] },
+  { id = "privacy", name = "Privacy & data protection", keywords = ["privacy", "data privacy", "differential privacy"] },
+]
+intermediate = [
+  { id = "security", name = "Prompt injection, jailbreaks & AI security", keywords = ["prompt injection", "jailbreak", "jailbreaking", "ai security", "data poisoning"] },
+  { id = "governance", name = "AI governance & regulation", keywords = ["ai governance", "ai regulation", "eu ai act", "governance", "regulation", "policy"] },
+  { id = "guardrails", name = "Guardrails & red teaming", keywords = ["guardrails", "red teaming", "ai red teaming"] },
+  { id = "trustworthy", name = "Trustworthy AI in practice", keywords = ["trustworthy ai", "trustworthy", "trust"] },
+]
+advanced = [
+  { id = "alignment", name = "Alignment", keywords = ["ai alignment", "alignment", "rlhf"] },
+  { id = "interpretability", name = "Mechanistic interpretability", keywords = ["mechanistic interpretability", "interpretability"] },
+  { id = "robustness", name = "Adversarial robustness", keywords = ["adversarial examples", "adversarial attack", "adversarial attacks", "robustness"] },
+  { id = "ai-risk", name = "AI risk & long-term safety", keywords = ["ai risk", "ai risks", "existential", "catastrophic", "agi"] },
 ]

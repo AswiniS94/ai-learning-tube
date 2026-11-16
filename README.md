@@ -141,8 +141,7 @@ Progress is tracked per browser with no account: open **My history** in the side
 
 ## Core paths (the minimal set to watch)
 
-For topics with a concept checklist in `config/concepts.toml` (currently LLMs, RAG, AI agents,
-computer vision, reinforcement learning and generative models), each level shows a **core path**:
+Every topic has a concept checklist in `config/concepts.toml`, and each level shows a **core path**:
 the fewest good videos that together cover every concept on that level's checklist.
 
 - A video covers a concept when one of the concept's keywords appears in its title, tags or
@@ -174,6 +173,8 @@ the fewest good videos that together cover every concept on that level's checkli
   and Semantic Scholar citation counts. Video pages show "Paper discussed in this video", and the
   **Papers** page lists every linked paper with the videos that explain it. You can add an optional
   `SEMANTIC_SCHOLAR_API_KEY` repo secret (free) for more reliable citation lookups.
+- Browsing: a multi-select **topic dropdown** (pick several topics at once), and the sidebar's channel
+  counts follow the current topic selection and filters.
 - On the site: a "Has code" filter, ⌨/📑 badges on cards, a Resources box on each video,
   course materials on course pages, and a starter kit at the top of each topic's path.
 

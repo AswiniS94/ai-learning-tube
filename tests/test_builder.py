@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "tests" / "fixtures" / "sample.json"
 # Tests use the real taxonomy/overrides but only the channels present in the sample data.
 TEST_CONFIG = Path(tempfile.mkdtemp(prefix="altube-cfg-"))
-for _name in ("taxonomy.toml", "overrides.toml"):
+for _name in ("taxonomy.toml", "overrides.toml", "resources.toml"):
     shutil.copy(ROOT / "config" / _name, TEST_CONFIG / _name)
 shutil.copy(ROOT / "tests" / "fixtures" / "channels.toml", TEST_CONFIG / "channels.toml")
 CFG = load_config(TEST_CONFIG)
@@ -177,8 +177,27 @@ class EndToEndTests(unittest.TestCase):
         self.assertNotIn("PLibmMoE", series)  # podcast playlist is not a course
         self.assertEqual(series["PLstanCS336"]["lv"], "advanced")
         self.assertEqual(len(series["PLnptelDL"]["v"]), 5)  # private + foreign videos dropped
+        # resources & papers
+        r = {l["l"]: l for l in titles["Build an AI Agent with LangGraph: Step by Step Tutorial"]["r"]}
+        self.assertEqual(r["Code: example-org/langgraph-agent-demo"]["st"], 1234)
+        self.assertEqual(r["Run it in Colab"]["k"], "notebook")
+        all_urls = [l["u"] for v in cat["videos"] for l in v.get("r", [])]
+        self.assertFalse(any("gone-repo" in u or "ibm-promo" in u for u in all_urls))  # deleted repo, channel promo
+        self.assertEqual(titles["What is Retrieval-Augmented Generation (RAG)?"]["pp"], ["2005.11401"])
+        self.assertEqual(cat["papers"]["1706.03762"]["c"], 150000)
+        self.assertIn("rag", cat["papers"]["2005.11401"]["tp"])
+        self.assertTrue(series["PLstanCS336"].get("r"))
+        self.assertGreaterEqual(len(cat["starters"]["llms"]), 3)
         html = (self.tmp / "dist" / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("{{", html)
+
+    def test_dead_links_hidden_after_second_failure(self):
+        dead = "https://dead.example.stanford.edu/slides.pdf"
+        first = [l["u"] for v in self.build()["videos"] for l in v.get("r", [])]
+        second = [l["u"] for v in self.build()["videos"] for l in v.get("r", [])]
+        self.assertIn(dead, first)
+        self.assertNotIn(dead, second)
+        self.assertIn("https://cs229.stanford.edu/main_notes.pdf", second)
 
     def test_incremental_run_is_cheap(self):
         self.build()
@@ -215,6 +234,72 @@ class EndToEndTests(unittest.TestCase):
         _, _, tagged = tag_catalog(CFG, state, Classifier(CFG))
         titles = {state["videos"][v]["title"] for v in tagged}
         self.assertIn("Lecture 5: Backpropagation", titles)  # older than the newest 3 uploads
+
+
+class ResourceTests(unittest.TestCase):
+    def test_extract_and_classify(self):
+        from builder.resources import extract_links
+        desc = ("💻 Code: https://github.com/Org/Repo/tree/main/ch02?utm_source=yt\n"
+                "Notebook → https://colab.research.google.com/drive/abc\n"
+                "Follow me https://github.com/someuser\n"
+                "Sponsor: https://github.com/sponsors/x\n"
+                "Slides: https://example.edu/slides.pdf.\n"
+                "Paper: https://arxiv.org/pdf/1706.03762v7 and arXiv:2005.11401\n"
+                "https://twitter.com/x https://ibm.biz/abc https://www.youtube.com/watch?v=1\n"
+                "Course: https://ocw.mit.edu/courses/6-034-artificial-intelligence-fall-2010/")
+        links = extract_links(desc)
+        kinds = [(l["k"], l["key"]) for l in links]
+        self.assertIn(("code", "gh:Org/Repo"), kinds)
+        self.assertEqual(links[0]["l"], "Code: Org/Repo")
+        self.assertNotIn("utm_source", links[0]["u"])
+        self.assertTrue(any(k == "notebook" for k, _ in kinds))
+        self.assertIn(("notes", "https://example.edu/slides.pdf"), kinds)
+        self.assertIn(("paper", "arxiv:1706.03762"), kinds)
+        self.assertIn(("paper", "arxiv:2005.11401"), kinds)
+        self.assertTrue(any(k == "course" for k, _ in kinds))
+        self.assertFalse(any("someuser" in key or "sponsors" in key or "twitter" in key or "ibm.biz" in key
+                             or "youtube" in key for _, key in kinds))
+
+    def test_promo_detection_counts_groups_not_videos(self):
+        from builder.resources import channel_link_frequency, video_resources
+        promo = "Slides https://promo.example.com/all.pdf"
+        course = "Notes https://course.example.edu/notes.pdf"
+        items = {"ch": [(promo + "\n" + course, "PLcourse") for _ in range(10)] +
+                       [(promo, f"v{i}") for i in range(10)]}
+        freq = channel_link_frequency(items)["ch"]
+        got = [l["u"] for l in video_resources(promo + "\n" + course, freq)]
+        self.assertEqual(got, ["https://course.example.edu/notes.pdf"])
+
+    def test_arxiv_feed_parser(self):
+        from builder.enrich import parse_arxiv_feed
+        xml = b"""<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+<entry><id>http://arxiv.org/abs/1706.03762v7</id><published>2017-06-12T17:57:34Z</published>
+<title>Attention Is All
+  You Need</title><summary>  The dominant sequence transduction models...</summary>
+<author><name>Ashish Vaswani</name></author><author><name>Noam Shazeer</name></author>
+<arxiv:primary_category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/></entry></feed>"""
+        p = parse_arxiv_feed(xml)["1706.03762"]
+        self.assertEqual(p["title"], "Attention Is All You Need")
+        self.assertEqual(p["authors"], ["Ashish Vaswani", "Noam Shazeer"])
+        self.assertEqual((p["published"], p["category"]), ("2017-06-12", "cs.CL"))
+
+    def test_github_rate_limit_stops_cleanly(self):
+        from builder.enrich import enrich_repos
+        calls = []
+        def fetch(url, **kw):
+            calls.append(url)
+            return 403, b"{}"
+        state = {}
+        enrich_repos(state, ["a/b", "c/d", "e/f"], Log(False), fetch, token="t")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(state["repos"], {})
+
+    def test_curated_file_is_valid(self):
+        from builder.resources import load_curated
+        cur = load_curated(ROOT / "config", {t.id for t in CFG.topics})
+        for tid in ("llms", "rag", "ai-agents", "computer-vision", "reinforcement-learning", "generative-models"):
+            self.assertGreaterEqual(len(cur["starters"].get(tid, [])), 3, tid)
 
 
 class RealConfigTests(unittest.TestCase):

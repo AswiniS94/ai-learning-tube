@@ -70,7 +70,7 @@
     const p = new URLSearchParams();
     const merged = Object.assign({ q: params.get("q") || "", topic: params.get("topic") || "", lv: params.get("lv") || "",
       f: params.get("f") || "", ch: params.get("ch") || "", sort: params.get("sort") || "", dur: params.get("dur") || "",
-      hw: params.get("hw") || "" }, over || {});
+      hw: params.get("hw") || "", code: params.get("code") || "" }, over || {});
     for (const k in merged) if (merged[k]) p.set(k, merged[k]);
     const s = p.toString();
     return "#/" + (s ? "?" + s : "");
@@ -107,7 +107,7 @@
   function renderNav() {
     const link = (href, label, extra, prefix) => '<a class="nav-link" href="' + href + '">' + (prefix || "") +
       '<span class="nav-label">' + label + "</span>" + (extra || "") + "</a>";
-    let h = link("#/", "🏠&nbsp; Home") + link("#/paths", "🧭&nbsp; Learning paths") + link("#/courses", "🎓&nbsp; Courses") + link("#/history", "🕘&nbsp; My history") +
+    let h = link("#/", "🏠&nbsp; Home") + link("#/paths", "🧭&nbsp; Learning paths") + link("#/courses", "🎓&nbsp; Courses") + link("#/history", "🕘&nbsp; My history") + link("#/papers", "📑&nbsp; Papers") +
       link("#/about", "ℹ️&nbsp; How ranking works");
     h += "<h4>Topics</h4>";
     for (const t of DB.topics) {
@@ -146,6 +146,7 @@
     else if (view === "paths") renderPaths();
     else if (view === "about") renderAbout();
     else if (view === "history") renderHistory();
+    else if (view === "papers") renderPapers(params);
     else renderBrowse(params);
     markNav();
     if (!(view === "paths" && location.hash.split("#")[2])) window.scrollTo(0, 0);
@@ -160,6 +161,57 @@
   function chName(key) { return esc((IDX.channel.get(key) || {}).name || key); }
   function topicName(id) { return esc((IDX.topic.get(id) || {}).name || id); }
   function lvTag(lv) { return '<span class="tag lv-' + esc(lv) + '">' + esc(LEVEL_LABEL[lv] || lv) + "</span>"; }
+
+  // ------------------------------------------------------------ resources & papers
+  const KIND = {
+    code: ["⌨", "Code"], notebook: ["📓", "Notebooks"], notes: ["📄", "Notes & slides"],
+    course: ["🎓", "Course pages"], paper: ["📑", "Papers"],
+  };
+  const hasCode = (v) => (v.r || []).some((l) => l.k === "code" || l.k === "notebook");
+  function resBadges(v) {
+    let h = "";
+    if (hasCode(v)) h += '<span class="tag res" title="Has code or notebooks">⌨ code</span>';
+    if (v.pp && v.pp.length) h += '<span class="tag res" title="Linked research paper">📑 paper</span>';
+    return h;
+  }
+  function linkItem(l) {
+    const extra = [];
+    if (l.st != null) extra.push("★ " + fmtNum(l.st));
+    if (l.pu) extra.push("updated " + ago(l.pu));
+    if (l.ar) extra.push("archived");
+    return '<li><a href="' + esc(l.u) + '" target="_blank" rel="noopener">' + esc(l.l) + " ↗</a>" +
+      (extra.length ? ' <span class="sub">' + esc(extra.join(" · ")) + "</span>" : "") + "</li>";
+  }
+  function resourceBox(links, title, intro) {
+    if (!links || !links.length) return "";
+    let h = '<div class="box resources"><h3>' + title + "</h3>" + (intro ? '<p class="sub">' + intro + "</p>" : "");
+    for (const k of Object.keys(KIND)) {
+      const group = links.filter((l) => l.k === k);
+      if (!group.length) continue;
+      h += '<div class="res-group"><b>' + KIND[k][0] + " " + KIND[k][1] + "</b><ul>" + group.map(linkItem).join("") + "</ul></div>";
+    }
+    return h + "</div>";
+  }
+  function authors(p) {
+    if (!p.a || !p.a.length) return "";
+    return esc(p.a.join(", ")) + (p.na > p.a.length ? " et al." : "");
+  }
+  function paperCard(id, p, opts) {
+    opts = opts || {};
+    const others = (p.v || []).filter((vid) => vid !== opts.skip);
+    let h = '<div class="paper"><a class="paper-title" href="https://arxiv.org/abs/' + esc(id) + '" target="_blank" rel="noopener">' + esc(p.t) + " ↗</a>" +
+      '<div class="sub">' + authors(p) + (p.d ? " · " + esc(p.d.slice(0, 4)) : "") + (p.ven ? " · " + esc(p.ven) : "") +
+      (p.c != null ? " · cited by " + fmtNum(p.c) : "") + "</div>";
+    if (p.tl) h += '<p class="paper-tl">' + esc(p.tl) + "</p>";
+    h += '<div class="paper-links"><a href="https://arxiv.org/abs/' + esc(id) + '" target="_blank" rel="noopener">Abstract</a>' +
+      '<a href="https://arxiv.org/pdf/' + esc(id) + '" target="_blank" rel="noopener">PDF</a></div>';
+    if (others.length) {
+      h += '<div class="sub">🎥 ' + (opts.skip ? "Also explained in: " : "Explained in: ") +
+        others.slice(0, 4).map((vid) => { const v = IDX.video.get(vid); return v ? '<a href="#/watch/' + enc(vid) + '">' + esc(v.t) + "</a>" : ""; })
+          .filter(Boolean).join(" · ") + "</div>";
+    }
+    return h + "</div>";
+  }
 
   function thumb(id, label, badges) {
     return '<div class="thumb"><img src="' + thumbUrl(id) + '" alt="" loading="lazy"><span class="ph">' + esc(label) + "</span>" + (badges || "") + "</div>";
@@ -189,7 +241,7 @@
       '<div class="sub"><a href="#/?ch=' + enc(v.c) + '">' + chName(v.c) + "</a> · " + fmtNum(v.v) + " views · " + ago(v.p) + "</div>" +
       '<div class="tags"><span class="q" title="Quality score (0–100)">★ ' + Math.round(v.q) + "</span>" + lvTag(v.lv) +
       '<a class="tag" href="#/topic/' + enc(v.tp[0]) + '">' + topicName(v.tp[0]) + "</a>" +
-      '<span class="tag">' + esc(v.f) + "</span></div>" +
+      '<span class="tag">' + esc(v.f) + "</span>" + resBadges(v) + "</div>" +
       "</div></div></article>";
   }
 
@@ -223,8 +275,10 @@
     const toks = norm(params.get("q") || "").trim().split(" ").filter(Boolean);
     const topic = params.get("topic"), lv = params.get("lv"), f = params.get("f"), ch = params.get("ch"), dur = params.get("dur");
     const hideWatched = params.get("hw") === "1";
+    const codeOnly = params.get("code") === "1";
     let out = DB.videos.filter((v) => {
       if (hideWatched && H.isWatched(v.id)) return false;
+      if (codeOnly && !hasCode(v)) return false;
       if (topic && !v.tp.includes(topic)) return false;
       if (lv && v.lv !== lv) return false;
       if (f && v.f !== f) return false;
@@ -264,7 +318,7 @@
   function renderBrowse(params) {
     const list = filterVideos(params);
     const topic = params.get("topic") || "";
-    const anyFilter = ["q", "topic", "lv", "f", "ch", "dur", "hw"].some((k) => params.get(k));
+    const anyFilter = ["q", "topic", "lv", "f", "ch", "dur", "hw", "code"].some((k) => params.get(k));
     let h = sampleBanner();
     if (!anyFilter) {
       h += hero();
@@ -285,6 +339,7 @@
       select("dur", params.get("dur") || "", Object.entries(DURS).filter(([k]) => k), "Any length") +
       select("sort", params.get("sort") || "quality", Object.entries(SORTS), "") +
       '<label class="toggle"><input type="checkbox" id="hw"' + (params.get("hw") === "1" ? " checked" : "") + "> Hide watched</label>" +
+      '<label class="toggle"><input type="checkbox" id="codeonly"' + (params.get("code") === "1" ? " checked" : "") + "> Has code</label>" +
       (anyFilter ? '<a class="clear-btn" href="#/">Clear filters</a>' : "") +
       '<span class="result-count">' + list.length.toLocaleString() + " videos</span></div>";
     if (topic) {
@@ -298,6 +353,8 @@
     }
     const hw = document.getElementById("hw");
     if (hw) hw.addEventListener("change", () => { location.hash = browseHref({ hw: hw.checked ? "1" : "" }); });
+    const co = document.getElementById("codeonly");
+    if (co) co.addEventListener("change", () => { location.hash = browseHref({ code: co.checked ? "1" : "" }); });
     if (!list.length) return;
     const grid = document.getElementById("grid");
     let shown = 0;
@@ -362,6 +419,15 @@
       h = h.replace(/<\/div>$/, "") + '<div class="path-progress"><span><b>' + totalDone + " of " + allItems.length +
         " steps done</b></span>" + '<span class="bar"><i style="width:' + Math.round(100 * totalDone / allItems.length) + '%"></i></span></div></div>';
     }
+    const kit = (DB.starters || {})[tid];
+    if (kit && kit.length) {
+      h += resourceBox(kit, "🧰 Starter kit: free hands-on materials", "Read or run these alongside the videos. Hand-picked, free, and link-checked nightly.");
+    }
+    const tPapers = Object.entries(DB.papers || {}).filter(([, p]) => (p.tp || []).includes(tid));
+    if (tPapers.length) {
+      h += '<p class="sub">📑 ' + tPapers.length + ' research paper' + (tPapers.length > 1 ? "s are" : " is") +
+        ' explained in this topic\'s videos — <a class="inline-link" href="#/papers?topic=' + enc(tid) + '">see them →</a></p>';
+    }
     let step = 0, any = false;
     for (const lv of DB.levels) {
       const items = path[lv] || [];
@@ -412,7 +478,8 @@
       '<a class="btn primary" href="#/watch/' + enc(startId) + '">' + startBtn + "</a>" +
       '<a class="btn" href="' + plUrl(s.id) + '" target="_blank" rel="noopener">Open on YouTube ↗</a></div>' +
       (done ? '<div class="path-progress"><span><b>' + done + " of " + s.v.length + ' lectures watched</b></span><span class="bar"><i style="width:' +
-        Math.round(100 * done / s.v.length) + '%"></i></span></div>' : "") + '</div><div class="course-list">';
+        Math.round(100 * done / s.v.length) + '%"></i></span></div>' : "") + "</div>" +
+      resourceBox(s.r, "📚 Course materials", "") + '<div class="course-list">';
     s.v.forEach((vid, i) => {
       const v = IDX.video.get(vid);
       if (!v) return;
@@ -430,7 +497,11 @@
     const flat = IDX.pathPos.get(tid) || [];
     const i = flat.findIndex((it) => (it.k === "v" && it.id === v.id) || (it.k === "s" && it.id === v.s));
     if (i < 0) return null;
-    for (let j = i + 1; j < flat.length; j++) if (!itemDone(flat[j])) return flat[j];
+    for (let j = i + 1; j < flat.length; j++) {
+      const it = flat[j];
+      if ((it.k === "v" && it.id === v.id) || (it.k === "s" && it.id === v.s)) continue;  // same video/course again
+      if (!itemDone(it)) return it;
+    }
     return null;
   }
 
@@ -467,6 +538,12 @@
         main += '<div class="box next-step"><h3>Next step in the ' + topicName(v.tp[0]) + " path (" + LEVEL_LABEL[nxt.lv] + ")</h3>" +
           '<a href="' + (nxt.k === "s" ? "#/course/" : "#/watch/") + enc(nxt.id) + '"><b>' + esc(tgt.t) + "</b></a></div>";
       }
+    }
+    main += resourceBox(v.r, "🧰 Hands-on resources", "Links from the video description and its course.");
+    if (s && s.r && s.r.length && !(v.r || []).length) main += resourceBox(s.r, "📚 Course materials", "From the course this lecture belongs to.");
+    if (v.pp && v.pp.length) {
+      main += '<div class="box"><h3>📑 Paper' + (v.pp.length > 1 ? "s" : "") + " discussed in this video</h3>" +
+        v.pp.map((id) => (DB.papers[id] ? paperCard(id, DB.papers[id], { skip: v.id }) : "")).join("") + "</div>";
     }
     const kw = (v.why.kw || []).map((k) => "“" + esc(k) + "”").join(", ");
     main += '<div class="box why"><h3>Why it’s here and how it’s tagged</h3><ul>' +
@@ -665,6 +742,24 @@
       clear.classList.add("danger");
       setTimeout(() => { if (clear.isConnected) { delete clear.dataset.armed; clear.textContent = "Clear history"; clear.classList.remove("danger"); } }, 4000);
     });
+  }
+
+  // ------------------------------------------------------------ papers page
+  function renderPapers(params) {
+    const topic = params.get("topic") || "";
+    const all = Object.entries(DB.papers || {});
+    const list = all.filter(([, p]) => !topic || (p.tp || []).includes(topic))
+      .sort((a, b) => (b[1].c || 0) - (a[1].c || 0) || (b[1].d > a[1].d ? 1 : -1));
+    let h = sampleBanner() + '<div class="page-head"><h1>Research papers</h1><p>Papers linked from the videos on this site, so every paper comes with a video that explains it. ' +
+      "Sorted by citations (from Semantic Scholar).</p></div>";
+    const counts = {};
+    for (const [, p] of all) for (const t of p.tp || []) counts[t] = (counts[t] || 0) + 1;
+    h += '<div class="chips"><a class="chip' + (topic ? "" : " on") + '" href="#/papers">All (' + all.length + ")</a>";
+    for (const t of DB.topics) if (counts[t.id]) h += '<a class="chip' + (topic === t.id ? " on" : "") + '" href="#/papers?topic=' + enc(t.id) + '">' + esc(t.name) + " (" + counts[t.id] + ")</a>";
+    h += "</div><br>";
+    h += list.length ? '<div class="paper-list">' + list.map(([id, p]) => paperCard(id, p)).join("") + "</div>"
+      : '<p class="empty">No papers linked yet. They appear as videos that cite arXiv papers are added.</p>';
+    $main.innerHTML = h;
   }
 
   // ------------------------------------------------------------ about

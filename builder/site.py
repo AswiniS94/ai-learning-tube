@@ -35,7 +35,9 @@ def channel_url(info: dict, ch) -> str:
     return "https://www.youtube.com/channel/" + (info.get("channel_id") or ch.channel_id)
 
 
-def build_catalog(cfg: Config, state: dict, tagged: dict, series: dict, paths: dict, boiler: dict, meta: dict) -> dict:
+def build_catalog(cfg: Config, state: dict, tagged: dict, series: dict, paths: dict, boiler: dict, meta: dict,
+                  res: dict | None = None) -> dict:
+    res = res or {"videos": {}, "video_papers": {}, "series": {}, "starters": {}, "papers": {}}
     videos = []
     for vid, r in sorted(tagged.items(), key=lambda kv: -kv[1]["q"]):
         v = state["videos"][vid]
@@ -69,6 +71,10 @@ def build_catalog(cfg: Config, state: dict, tagged: dict, series: dict, paths: d
             rec["ne"] = 1
         if d.get("caption"):
             rec["cc"] = 1
+        if res["videos"].get(vid):
+            rec["r"] = res["videos"][vid]
+        if res["video_papers"].get(vid):
+            rec["pp"] = res["video_papers"][vid]
         videos.append(rec)
 
     counts = {t.id: 0 for t in cfg.topics}
@@ -107,12 +113,42 @@ def build_catalog(cfg: Config, state: dict, tagged: dict, series: dict, paths: d
         "roadmaps": cfg.roadmaps,
         "series": [
             {"id": s["id"], "t": s["title"], "c": s["ch"], "tp": s["topics"], "lv": s["level"], "q": s["q"],
-             "course": s["course"], "v": s["members"]}
+             "course": s["course"], "v": s["members"], **({"r": res["series"][s["id"]]} if res["series"].get(s["id"]) else {})}
             for s in sorted(series.values(), key=lambda s: -s["q"])
         ],
+        "starters": res["starters"],
+        "papers": {pid: _paper(p["cache"], p["videos"], tagged) for pid, p in res["papers"].items()},
         "paths": paths,
         "videos": videos,
     }
+
+
+def _paper(c: dict, vids: list[str], tagged: dict) -> dict:
+    topics = []
+    for vid in sorted(vids, key=lambda v: -tagged[v]["q"]):
+        for t in tagged[vid]["topics"]:
+            if t not in topics:
+                topics.append(t)
+    out = {
+        "t": c.get("title", ""),
+        "a": c.get("authors", [])[:3],
+        "na": c.get("n_authors", 0),
+        "d": c.get("published", ""),
+        "cat": c.get("category", ""),
+        "tl": c.get("tldr") or _clip(c.get("abstract", ""), 260),
+        "tp": topics,
+        "v": sorted(vids, key=lambda v: -tagged[v]["q"]),
+    }
+    if "citations" in c:
+        out["c"] = c["citations"]
+        out["inf"] = c.get("influential", 0)
+    if c.get("venue"):
+        out["ven"] = c["venue"]
+    return out
+
+
+def _clip(text: str, n: int) -> str:
+    return text if len(text) <= n else text[: n - 1].rsplit(" ", 1)[0] + "…"
 
 
 def write_site(catalog: dict, site_src: str | Path, out_dir: str | Path, base_url: str = "") -> Path:

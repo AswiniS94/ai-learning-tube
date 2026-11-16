@@ -35,14 +35,16 @@ def pl(channel, pid, title, items, desc=""):
 
 STAN_BP = ("\n\nStanford Online is the portal for academic and professional education at Stanford."
            "\nFor more information about Stanford's Artificial Intelligence programs visit: https://stanford.io/ai")
-IBM_BP = ("\n\nAI news moves fast. Sign up for a monthly newsletter for AI updates from IBM → https://ibm.biz/news"
+IBM_BP = ("\n\nTry our demos: https://github.com/ibm-promo/ai-demos"
+          "\nAI news moves fast. Sign up for a monthly newsletter for AI updates from IBM → https://ibm.biz/news"
           "\nWant to learn more about AI agents? → https://ibm.biz/agents"
           "\nSubscribe to build your skillset and gain insights from IBM experts.")
 NPTEL_BP = "\n\nCOPYRIGHT reserved to NPTEL, Govt. of India. Duplication prohibited."
 
 # ---------------- Stanford Online
 cs229 = [vid(STAN, f"Stanford CS229: Machine Learning Course, Lecture {i} - Andrew Ng (Autumn 2018)" + s, 4500 + i * 60,
-             v, l, c, "2020-04-17", "Andrew Ng, Adjunct Professor of Computer Science." + STAN_BP)
+             v, l, c, "2020-04-17", "Andrew Ng, Adjunct Professor of Computer Science.\nLecture notes: https://cs229.stanford.edu/main_notes.pdf\n"
+             "Old slides: https://dead.example.stanford.edu/slides.pdf" + STAN_BP)
          for i, s, v, l, c in [
              (1, "", 4_800_000, 72_000, 1_500), (2, " | Linear Regression and Gradient Descent", 2_100_000, 30_000, 900),
              (3, " | Locally Weighted & Logistic Regression", 1_100_000, 15_000, 400),
@@ -51,7 +53,7 @@ cs229 = [vid(STAN, f"Stanford CS229: Machine Learning Course, Lecture {i} - Andr
 pl(STAN, "PLstanCS229", "Stanford CS229: Machine Learning Full Course taught by Andrew Ng | Autumn 2018", cs229)
 
 cs336 = [vid(STAN, f"Stanford CS336 Language Modeling from Scratch | Spring 2025 | Lecture {i}: {t}", 4700, v, l, c,
-             "2025-04-10", "Percy Liang and Tatsunori Hashimoto." + STAN_BP)
+             "2025-04-10", "Percy Liang and Tatsunori Hashimoto.\nCourse website: https://stanford-cs336.github.io/spring2025/" + STAN_BP)
          for i, t, v, l, c in [(1, "Overview and Tokenization", 900_000, 22_000, 700),
                                (2, "PyTorch, Resource Accounting", 300_000, 6_000, 120),
                                (3, "Architectures, Hyperparameters", 210_000, 4_900, 90),
@@ -67,7 +69,7 @@ cs231 = [vid(STAN, f"Stanford CS231N | Spring 2025 | Lecture {i}: {t}", 4400, v,
 pl(STAN, "PLstanCS231n", "Stanford CS231N Deep Learning for Computer Vision | Spring 2025", cs231)
 
 vid(STAN, "Stanford Seminar - Building Reliable AI Agents in the Real World", 3600, 60_000, 1_400, 60, "2025-11-03",
-    "In this talk we discuss evaluation and failure modes of LLM agents." + STAN_BP)
+    "In this talk we discuss evaluation and failure modes of LLM agents. Builds on ReAct (arXiv:2210.03629)." + STAN_BP)
 vid(STAN, "What Is Unsupervised Learning in Machine Learning?", 260, 25_000, 700, 15, "2025-09-01", STAN_BP.strip())
 vid(STAN, "How Does K-means Clustering Work?", 300, 31_000, 820, 20, "2025-09-08", STAN_BP.strip())
 vid(STAN, "Stanford Online AI Programs Top Questions: When and How to Enroll in Online AI Courses", 900, 9_000, 100, 5,
@@ -86,17 +88,21 @@ agents = [
     vid(IBM, "AI Agents vs Agentic AI: What's the Difference?", 610, 400_000, 11_000, 300, "2025-06-01",
         "Martin Keen compares single agents with agentic systems." + IBM_BP),
     vid(IBM, "What is MCP? Model Context Protocol Explained", 540, 650_000, 17_000, 500, "2025-03-20",
-        "How the Model Context Protocol connects AI agents to tools and data." + IBM_BP),
+        "How the Model Context Protocol connects AI agents to tools and data.\n"
+        "Reference servers: https://github.com/modelcontextprotocol/servers" + IBM_BP),
     vid(IBM, "Build an AI Agent with LangGraph: Step by Step Tutorial", 1500, 120_000, 3_900, 210, "2025-08-02",
-        "Hands-on: build a tool-calling agent with LangGraph and Python." + IBM_BP, ["langgraph", "python"]),
+        "Hands-on: build a tool-calling agent with LangGraph and Python.\n"
+        "💻 Code: https://github.com/example-org/langgraph-agent-demo?utm_source=youtube\n"
+        "📓 Run it in Colab → https://colab.research.google.com/drive/1AbCdEfGhIjK\n"
+        "Deleted repo: https://github.com/example-org/gone-repo" + IBM_BP, ["langgraph", "python"]),
 ]
 pl(IBM, "PLibmAgents", "AI Agents", agents)
 vid(IBM, "What is Retrieval-Augmented Generation (RAG)?", 380, 1_300_000, 30_000, 600, "2023-08-22",
-    "Marina Danilevsky explains RAG." + IBM_BP, ["rag", "llm"])
+    "Marina Danilevsky explains RAG.\nOriginal paper: https://arxiv.org/abs/2005.11401v4" + IBM_BP, ["rag", "llm"])
 vid(IBM, "RAG vs Fine-Tuning", 500, 300_000, 8_000, 250, "2024-11-10", "When to retrieve and when to fine tune an LLM." + IBM_BP)
 vid(IBM, "LangChain vs LangGraph: A Tale of Two Frameworks", 600, 350_000, 9_500, 280, "2024-09-30", IBM_BP.strip())
 vid(IBM, "How Transformers Work: Attention Explained", 620, 500_000, 14_000, 330, "2024-02-14",
-    "Self-attention and the transformer architecture behind LLMs." + IBM_BP)
+    "Self-attention and the transformer architecture behind LLMs.\nPaper: https://arxiv.org/pdf/1706.03762" + IBM_BP)
 vid(IBM, "What is a Vector Database?", 480, 420_000, 10_000, 200, "2024-04-02", IBM_BP.strip())
 vid(IBM, "What is LLM Quantization?", 560, 90_000, 2_800, 90, "2025-01-15", "Shrinking LLMs for inference." + IBM_BP)
 vid(IBM, "Explainable AI Explained", 450, 70_000, 1_500, 40, "2023-05-05", IBM_BP.strip())
@@ -142,6 +148,33 @@ mt = [vid(NPTEL, f"Lecture {i}: {t}", 2500, 20_000, 200, 5, "2016-02-01", "Prof.
 pl(NPTEL, "PLnptelMT", "Mass Transfer Operations", mt)
 vid(NPTEL, "Linear Algebra - Lecture 12: Eigenvalues and Eigenvectors", 2700, 50_000, 600, 12, "2015-01-01", NPTEL_BP.strip())
 
+web = {
+    "repos": {
+        "example-org/langgraph-agent-demo": {"full_name": "example-org/langgraph-agent-demo", "stargazers_count": 1234,
+                                             "pushed_at": "2026-10-01T00:00:00Z", "archived": False, "size": 120,
+                                             "license": {"spdx_id": "MIT"}, "description": "Demo agent"},
+        "modelcontextprotocol/servers": {"full_name": "modelcontextprotocol/servers", "stargazers_count": 50000,
+                                         "pushed_at": "2026-11-01T00:00:00Z", "archived": False, "size": 9000,
+                                         "license": {"spdx_id": "MIT"}, "description": "MCP servers"},
+        "ibm-promo/ai-demos": {"full_name": "ibm-promo/ai-demos", "stargazers_count": 10, "pushed_at": "2025-01-01T00:00:00Z",
+                               "archived": True, "size": 10, "license": None, "description": "promo"},
+    },
+    "dead": ["https://dead.example.stanford.edu/slides.pdf"],
+    "arxiv": {
+        "1706.03762": {"title": "Attention Is All You Need", "authors": ["Ashish Vaswani", "Noam Shazeer", "Niki Parmar", "Jakob Uszkoreit"],
+                       "published": "2017-06-12", "abstract": "The dominant sequence transduction models...", "category": "cs.CL"},
+        "2005.11401": {"title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks", "authors": ["Patrick Lewis", "Ethan Perez"],
+                       "published": "2020-05-22", "abstract": "Large pre-trained language models...", "category": "cs.CL"},
+        "2210.03629": {"title": "ReAct: Synergizing Reasoning and Acting in Language Models", "authors": ["Shunyu Yao", "Jeffrey Zhao"],
+                       "published": "2022-10-06", "abstract": "While large language models...", "category": "cs.CL"},
+    },
+    "s2": {
+        "1706.03762": {"citationCount": 150000, "influentialCitationCount": 15000, "venue": "NeurIPS", "year": 2017,
+                       "tldr": {"text": "A new simple network architecture, the Transformer, based solely on attention."}},
+        "2005.11401": {"citationCount": 6000, "influentialCitationCount": 700, "venue": "NeurIPS", "year": 2020, "tldr": None},
+    },
+}
+
 data = {
     "channels": [
         {"id": STAN, "handle": "@stanfordonline", "title": "Stanford Online", "subs": 1_200_000},
@@ -150,6 +183,7 @@ data = {
     ],
     "videos": videos,
     "playlists": playlists,
+    "web": web,
 }
 out = Path(__file__).parent / "fixtures" / "sample.json"
 out.write_text(json.dumps(data, indent=1, ensure_ascii=False), encoding="utf-8")

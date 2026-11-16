@@ -1,0 +1,126 @@
+# Curated, publicly available resources. Links only — nothing is re-hosted.
+# Every link here was checked when it was added, and the nightly build re-checks
+# them (dead links are hidden automatically after two failed checks).
+#
+# kind: code | notebook | notes | course | paper
+#
+# [[course]] attaches links to a course/playlist on the site.
+#   codes     course numbers found in the playlist title (e.g. "cs229", "6.s191")
+#   playlists YouTube playlist IDs (alternative to codes)
+#
+# [[starter]] is the "Starter kit" shown at the top of a topic's learning path.
+# Keep each kit short (3–6 links) — the point is to avoid overwhelming people.
+
+# ------------------------------------------------------------- courses ----
+
+[[course]]
+name = "Stanford CS229 Machine Learning"
+codes = ["cs229"]
+links = [
+  { kind = "course", url = "https://cs229.stanford.edu/", label = "Course website (syllabus; some current-term materials are Stanford-only)" },
+]
+
+[[course]]
+name = "Stanford CS231n"
+codes = ["cs231n"]
+links = [
+  { kind = "notes", url = "https://cs231n.github.io/", label = "CS231n course notes (free)" },
+]
+
+[[course]]
+name = "Stanford CS224N"
+codes = ["cs224n"]
+links = [
+  { kind = "course", url = "https://web.stanford.edu/class/cs224n/", label = "Course website (slides, assignments)" },
+]
+
+[[course]]
+name = "Stanford CS234"
+codes = ["cs234"]
+links = [
+  { kind = "course", url = "https://web.stanford.edu/class/cs234/", label = "Course website (lecture materials)" },
+]
+
+[[course]]
+name = "Stanford CS236"
+codes = ["cs236"]
+links = [
+  { kind = "course", url = "https://deepgenerativemodels.github.io/", label = "Course website" },
+  { kind = "notes", url = "https://deepgenerativemodels.github.io/notes/index.html", label = "CS236 course notes (free)" },
+]
+
+[[course]]
+name = "Stanford CS336"
+codes = ["cs336"]
+links = [
+  { kind = "course", url = "https://cs336.stanford.edu/", label = "Course website (latest offering)" },
+  { kind = "course", url = "https://stanford-cs336.github.io/spring2025/", label = "Spring 2025 archive (lectures, assignments)" },
+]
+
+[[course]]
+name = "Stanford CS25"
+codes = ["cs25"]
+links = [
+  { kind = "course", url = "https://web.stanford.edu/class/cs25/", label = "Seminar website (speakers, slides)" },
+]
+
+[[course]]
+name = "MIT 6.S191"
+codes = ["6.s191"]
+links = [
+  { kind = "course", url = "https://introtodeeplearning.com/", label = "Course website (slides, Colab labs)" },
+]
+
+# -------------------------------------------------------- starter kits ----
+
+[[starter]]
+topic = "llms"
+links = [
+  { kind = "notes", url = "https://jalammar.github.io/illustrated-transformer/", label = "The Illustrated Transformer (Jay Alammar)" },
+  { kind = "course", url = "https://huggingface.co/learn/llm-course/chapter1/1", label = "Hugging Face LLM Course (free, notebooks included)" },
+  { kind = "code", url = "https://github.com/rasbt/LLMs-from-scratch", label = "Build a GPT-style LLM from scratch in PyTorch (Raschka)" },
+  { kind = "course", url = "https://stanford-cs336.github.io/spring2025/", label = "Stanford CS336: Language Modeling from Scratch (advanced)" },
+]
+
+[[starter]]
+topic = "rag"
+links = [
+  { kind = "notebook", url = "https://huggingface.co/learn/cookbook/advanced_rag", label = "Advanced RAG walkthrough (Hugging Face Cookbook, runs in Colab)" },
+  { kind = "notebook", url = "https://huggingface.co/learn/cookbook/agent_rag", label = "Agentic RAG: query reformulation and self-query (Cookbook)" },
+  { kind = "code", url = "https://github.com/NirDiamant/RAG_Techniques", label = "RAG Techniques: runnable notebooks for 30+ techniques" },
+  { kind = "paper", url = "https://arxiv.org/abs/2005.11401", label = "The original RAG paper (Lewis et al., 2020)" },
+]
+
+[[starter]]
+topic = "ai-agents"
+links = [
+  { kind = "notes", url = "https://www.anthropic.com/engineering/building-effective-agents", label = "Building effective agents (Anthropic) — patterns before frameworks" },
+  { kind = "course", url = "https://huggingface.co/learn/agents-course", label = "Hugging Face Agents Course (smolagents, LlamaIndex, LangGraph)" },
+  { kind = "code", url = "https://github.com/microsoft/ai-agents-for-beginners", label = "AI Agents for Beginners (Microsoft, lessons + code)" },
+  { kind = "course", url = "https://modelcontextprotocol.io/", label = "Model Context Protocol docs and specification" },
+]
+
+[[starter]]
+topic = "computer-vision"
+links = [
+  { kind = "notes", url = "https://cs231n.github.io/", label = "CS231n course notes (CNNs for visual recognition)" },
+  { kind = "notes", url = "https://d2l.ai/chapter_computer-vision/index.html", label = "Dive into Deep Learning — Computer Vision chapter (runnable code)" },
+  { kind = "notes", url = "https://szeliski.org/Book", label = "Szeliski, Computer Vision: Algorithms and Applications (free PDF for personal use)" },
+]
+
+[[starter]]
+topic = "reinforcement-learning"
+links = [
+  { kind = "notes", url = "http://incompleteideas.net/book/the-book-2nd.html", label = "Sutton & Barto, Reinforcement Learning: An Introduction (free PDF)" },
+  { kind = "course", url = "https://huggingface.co/learn/deep-rl-course/unit0/introduction", label = "Hugging Face Deep RL Course (Colab hands-on; low-maintenance)" },
+  { kind = "code", url = "https://spinningup.openai.com/", label = "OpenAI Spinning Up in Deep RL (clean implementations; maintenance mode)" },
+]
+
+[[starter]]
+topic = "generative-models"
+links = [
+  { kind = "notes", url = "https://lilianweng.github.io/posts/2021-07-11-diffusion-models/", label = "What are Diffusion Models? (Lilian Weng)" },
+  { kind = "course", url = "https://huggingface.co/learn/diffusion-course", label = "Hugging Face Diffusion Models Course (train your own)" },
+  { kind = "notes", url = "https://deepgenerativemodels.github.io/notes/index.html", label = "Stanford CS236 notes: VAEs, flows, GANs, diffusion" },
+  { kind = "code", url = "https://github.com/huggingface/diffusers", label = "Diffusers library (Hugging Face)" },
+]

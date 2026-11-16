@@ -95,7 +95,7 @@ def _record_basic(state: dict, vid: str, key: str, snippet: dict, published: str
     """Insert/refresh a video's basic text. Returns True if it was new."""
     videos = state["videos"]
     title = snippet.get("title", "")
-    desc = (snippet.get("description") or "")[:3000]
+    desc = (snippet.get("description") or "")[:5000]
     v = videos.get(vid)
     if v is None:
         videos[vid] = {"ch": key, "title": title, "desc": desc, "published": published or ""}
@@ -315,7 +315,7 @@ def sync_details(client, state: dict, log: Log, video_ids: list[str], refresh_ho
                 continue
             sn, cd, stt, status = it.get("snippet", {}), it.get("contentDetails", {}), it.get("statistics", {}), it.get("status", {})
             v["title"] = sn.get("title", v.get("title", ""))
-            v["desc"] = (sn.get("description") or "")[:3000]
+            v["desc"] = (sn.get("description") or "")[:5000]
             v["published"] = sn.get("publishedAt", v.get("published", ""))
             v["details"] = {
                 "duration": parse_duration(cd.get("duration")),

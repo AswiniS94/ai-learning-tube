@@ -53,6 +53,10 @@ jobs:
       - name: Sync from YouTube and build site
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          # Built-in token, used read-only for GitHub repo details (stars, last update).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: a free Semantic Scholar API key gives more reliable citation counts.
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.full_rescan }}" = "true" ]; then
             python -m builder build --full

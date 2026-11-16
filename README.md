@@ -139,6 +139,25 @@ Progress is tracked per browser with no account: open **My history** in the side
 - If an ad/tracker blocker stops YouTube's player script, videos still play in a plain embed. Progress
   isn't tracked in that case, but the manual "Mark as watched" button still works.
 
+## Hands-on resources and papers
+
+- **From video descriptions:** links are classified as code (GitHub/GitLab/HF Spaces), notebooks
+  (Colab, Kaggle, `.ipynb`), notes/PDFs, course pages, and papers (arXiv and others). Social, shop,
+  shortener and promo links are dropped. A link repeated across many *unrelated* videos of a channel
+  counts as a promo; a link shared by all lectures of one course (its notes or website) does not.
+- **Curated** in `config/resources.toml`: official materials per course (matched by course number,
+  e.g. `cs229`, or playlist ID) and a short **starter kit** per topic. Each link was checked when it
+  was added.
+- **Checked nightly:** GitHub repos get stars and last-update dates through the API (using the
+  workflow's built-in `GITHUB_TOKEN`), and deleted or empty repos are hidden. Other links are
+  re-checked monthly; a link that fails is checked again the next night and hidden after a second failure.
+- **Papers:** arXiv links and `arXiv:XXXX.XXXXX` mentions in descriptions are matched to arXiv metadata
+  and Semantic Scholar citation counts. Video pages show "Paper discussed in this video", and the
+  **Papers** page lists every linked paper with the videos that explain it. You can add an optional
+  `SEMANTIC_SCHOLAR_API_KEY` repo secret (free) for more reliable citation lookups.
+- On the site: a "Has code" filter, ⌨/📑 badges on cards, a Resources box on each video,
+  course materials on course pages, and a starter kit at the top of each topic's path.
+
 ## Curate
 
 `config/overrides.toml`:

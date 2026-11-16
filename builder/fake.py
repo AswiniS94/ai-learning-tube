@@ -126,3 +126,47 @@ def _iso(seconds) -> str:
         return seconds
     s = int(seconds)
     return f"PT{s // 3600}H{s % 3600 // 60}M{s % 60}S"
+
+
+def fake_web(fixture):
+    """A fake `fetch` for enrich.py: GitHub, arXiv, Semantic Scholar and link checks from fixture['web']."""
+    import json as _json
+    from urllib.parse import parse_qs, urlsplit
+    from xml.sax.saxutils import escape
+
+    if not isinstance(fixture, dict):
+        fixture = _json.loads(Path(fixture).read_text(encoding="utf-8"))
+    web = fixture.get("web", {})
+    calls = []
+
+    def fetch(url, method="GET", headers=None, body=None, timeout=0):
+        calls.append((method, url))
+        parts = urlsplit(url)
+        if parts.netloc == "api.github.com":
+            repo = parts.path.removeprefix("/repos/")
+            d = web.get("repos", {}).get(repo)
+            return (200, _json.dumps(d).encode()) if d else (404, b"{}")
+        if parts.netloc == "export.arxiv.org":
+            ids = parse_qs(parts.query).get("id_list", [""])[0].split(",")
+            entries = []
+            for i in ids:
+                p = web.get("arxiv", {}).get(i)
+                if not p:
+                    continue
+                authors = "".join(f"<author><name>{escape(a)}</name></author>" for a in p["authors"])
+                entries.append(
+                    f"<entry><id>http://arxiv.org/abs/{i}v2</id><published>{p['published']}T00:00:00Z</published>"
+                    f"<title>{escape(p['title'])}</title><summary>{escape(p['abstract'])}</summary>{authors}"
+                    f"<arxiv:primary_category term=\"{p['category']}\"/></entry>")
+            xml = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" '
+                   'xmlns:arxiv="http://arxiv.org/schemas/atom">' + "".join(entries) + "</feed>")
+            return 200, xml.encode()
+        if parts.netloc == "api.semanticscholar.org":
+            ids = _json.loads(body)["ids"]
+            return 200, _json.dumps([web.get("s2", {}).get(i.removeprefix("ARXIV:")) for i in ids]).encode()
+        if url in web.get("dead", []):
+            return 404, b""
+        return 200, b"ok"
+
+    fetch.calls = calls
+    return fetch
